@@ -24,6 +24,7 @@ PhaseGarage::PhaseGarage(){
 void PhaseGarage::Execute(){
 	printf("PhaseGarage Execute\n");
     PoseDrivingControl poseDrivingControl;
+    ev3_speaker_play_tone(440, 50);
 
     Tail* tail = Tail::GetInstance();
     Timer* timer = Timer::GetInstance();
@@ -61,17 +62,20 @@ void PhaseGarage::Execute(){
     pos->UpdateSelfPos();
     posSelf = pos->GetSelfPos();
     thetaSelf = pos->GetTheta();
+    poseDrivingControl.SetStop(false,false,false);
 
     // 起き上がり
     while(true){
         if (abs(tail->GetAngle() - 75) < 2) {
-            tslp_tsk(400);
-            poseDrivingControl.SetParams(30,0,45,true);
+            poseDrivingControl.SetStop(true,true,true);
+            tslp_tsk(1000);
+            poseDrivingControl.SetStop(false,false,false);
+            poseDrivingControl.SetParams(50,0,45,true);
             poseDrivingControl.Driving();
-            tslp_tsk(400);
+            tslp_tsk(4);
             break;
         }
-        poseDrivingControl.SetParams(-10,0,75,false);
+        poseDrivingControl.SetParams(-30,0,75,false);
         poseDrivingControl.Driving();
 
         pos->UpdateSelfPos();
@@ -91,7 +95,7 @@ void PhaseGarage::Execute(){
     // 前進
     int tau = 1000 + timer->Now();
     while (timer->Now() < tau) {
-        poseDrivingControl.SetParams(70,0,45,true);
+        poseDrivingControl.SetParams(30,0,45,true);
         poseDrivingControl.Driving();
 
         pos->UpdateSelfPos();
@@ -107,6 +111,7 @@ void PhaseGarage::Execute(){
         tslp_tsk(4);
     }
 
+    // 停止
     tau = 1000 + timer->Now();
     while (timer->Now() < tau) {
         poseDrivingControl.SetParams(0,0,45,true);
@@ -126,9 +131,9 @@ void PhaseGarage::Execute(){
         tslp_tsk(4);
     }
 
+    // 尻尾下ろし
     while(true){
         if (abs(tail->GetAngle() - 70) < 2) {
-            poseDrivingControl.SetStop(true,false,false);
             poseDrivingControl.SetParams(30,0,70,false);
             poseDrivingControl.Driving();
             tslp_tsk(300);
