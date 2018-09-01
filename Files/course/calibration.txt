@@ -1,0 +1,3 @@
+Calibration 1
+White 30
+Black 0

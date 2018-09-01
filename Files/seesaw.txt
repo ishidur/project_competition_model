@@ -1,0 +1,2 @@
+ForwardAngle 500
+ForwardPower 80
