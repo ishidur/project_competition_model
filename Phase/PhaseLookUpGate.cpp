@@ -345,6 +345,28 @@ void PhaseLookUpGate::Execute(){
 
         tslp_tsk(4);
     }
+
+    // 起き上がり
+    while(true){
+        if (abs(tail->GetAngle() - 75) < 2) {
+            break;
+        }
+        poseDrivingControl.SetParams(-30,0,75,false);
+        poseDrivingControl.Driving();
+
+        pos->UpdateSelfPos();
+        posSelf = pos->GetSelfPos();
+        thetaSelf = pos->GetTheta();
+
+        if ((frameCount++) % log_refleshrate == 0) {
+            driveWheels->GetAngles(&angleLeft, &angleRight);
+            driveWheels->GetPWMs(&pwmLeft, &pwmRight);
+            fprintf(file,"%f,%f,%lf,%lf,%d,%d,%lf,%lf,%lf\n",
+                timer->Now(),postureSensor.GetAnglerVelocity(), angleLeft, angleRight, pwmLeft, pwmRight, posSelf.x, posSelf.y, thetaSelf);
+        }
+        
+        tslp_tsk(4);
+    }
 	poseDrivingControl.SetStop(true,true,true);
     
     tslp_tsk(1000); // タイヤ完全停止待機

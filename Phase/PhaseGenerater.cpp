@@ -25,7 +25,7 @@ PhaseGenerater::PhaseGenerater(): nowPhaseNum(0) {
 			new PhaseReady(),
 			new PhaseNavigation(),
 			new PhaseLookUpGate(),
-			new PhaseGarage(),
+			// new PhaseGarage(),
 			nullptr
 		};
 		printf("phaseList(L)\n");  
