@@ -70,9 +70,6 @@ void PhaseGarage::Execute(){
             poseDrivingControl.SetStop(true,true,true);
             tslp_tsk(1000);
             poseDrivingControl.SetStop(false,false,false);
-            poseDrivingControl.SetParams(50,0,45,true);
-            poseDrivingControl.Driving();
-            tslp_tsk(4);
             break;
         }
         poseDrivingControl.SetParams(-30,0,75,false);
@@ -91,11 +88,10 @@ void PhaseGarage::Execute(){
         
         tslp_tsk(4);
     }
-    ev3_speaker_play_tone(440, 50);
     // 前進
     int tau = 1000 + timer->Now();
     while (timer->Now() < tau) {
-        poseDrivingControl.SetParams(30,0,45,true);
+        poseDrivingControl.SetParams(30,0,75,true);
         poseDrivingControl.Driving();
 
         pos->UpdateSelfPos();
@@ -110,37 +106,10 @@ void PhaseGarage::Execute(){
         }
         tslp_tsk(4);
     }
-
     // 停止
     tau = 1000 + timer->Now();
     while (timer->Now() < tau) {
-        poseDrivingControl.SetParams(0,0,45,true);
-        poseDrivingControl.Driving();
-
-        pos->UpdateSelfPos();
-        posSelf = pos->GetSelfPos();
-        thetaSelf = pos->GetTheta();
-
-        if ((frameCount++) % log_refleshrate == 0) {
-            driveWheels->GetAngles(&angleLeft, &angleRight);
-            driveWheels->GetPWMs(&pwmLeft, &pwmRight);
-            fprintf(file,"%f,%f,%lf,%lf,%d,%d,%lf,%lf,%lf\n",
-                timer->Now(),postureSensor.GetAnglerVelocity(), angleLeft, angleRight, pwmLeft, pwmRight, posSelf.x, posSelf.y, thetaSelf);
-        }
-        
-        tslp_tsk(4);
-    }
-
-    // 尻尾下ろし
-    while(true){
-        if (abs(tail->GetAngle() - 70) < 2) {
-            poseDrivingControl.SetParams(30,0,70,false);
-            poseDrivingControl.Driving();
-            tslp_tsk(300);
-            poseDrivingControl.SetStop(true,true,true);
-            break;
-        }
-        poseDrivingControl.SetParams(0,0,70,true);
+        poseDrivingControl.SetParams(0,0,75,true);
         poseDrivingControl.Driving();
 
         pos->UpdateSelfPos();
