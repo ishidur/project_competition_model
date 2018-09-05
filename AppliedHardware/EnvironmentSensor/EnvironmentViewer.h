@@ -19,6 +19,7 @@ namespace AppliedHardware{
 				static EnvironmentViewer* GetInstance();
 
 				float GetLuminance();
+				void GetRGB(int* r, int* g, int* b);
 				float GetUSDistance();
 				bool GetTouch();
 

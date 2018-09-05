@@ -34,3 +34,11 @@ void ColorSensor::SetLuminanceRange(int white, int black){
 	this->whiteValue = white;
 	this->blackValue = black;
 }
+
+void ColorSensor::GetRGB(int* r, int* g, int* b){
+	rgb_raw_t val;
+	ev3_color_sensor_get_rgb_raw(port, &val);
+	*r = val.r;
+	*g = val.g;
+	*b = val.b;
+}

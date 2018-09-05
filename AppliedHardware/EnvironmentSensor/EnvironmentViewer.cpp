@@ -22,6 +22,11 @@ float EnvironmentViewer::GetLuminance(){
 	return colorSensor->GetValue();
 }
 
+
+void EnvironmentViewer::GetRGB(int* r, int* g, int* b){
+	colorSensor->GetRGB(r, g, b);
+}
+
 float EnvironmentViewer::GetUSDistance(){
 	return ultraSonicSensor->GetValue();
 }

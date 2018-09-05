@@ -3,12 +3,14 @@
 
 #include "../Positioning/Localization/SelfPos.h"
 #include "PhaseBase.h"
+#include "stdlib.h"
 
 namespace Phase{
 
 	class PhaseLookUpGate : public PhaseBase{
 		private:
 			Positioning::Localization::SelfPos* pos; 
+			FILE* file;
 
 		public:
 			PhaseLookUpGate();
