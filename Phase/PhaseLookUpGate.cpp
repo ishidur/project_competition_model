@@ -91,7 +91,7 @@ void PhaseLookUpGate::Execute(){
     // poseDrivingControl.Driving();
 
     printf("PhaseLookUpGate 1.5.Landing\n");	
-	poseDrivingControl.SetParams(0,0,75,true);
+	poseDrivingControl.SetParams(-10,0,75,true);
     while(true){
         if (abs(tail->GetAngle() - 75) <= 2) {
             break;
@@ -116,15 +116,35 @@ void PhaseLookUpGate::Execute(){
          
         tslp_tsk(4);
     }
-    poseDrivingControl.SetParams(10,0,75,false);
     poseDrivingControl.SetStop(true,true,true);
-    poseDrivingControl.Driving();
+    
+	float gyro_sum = 0.0;
+    poseDrivingControl.SetParams(10,0,75,false);
+    while(1){
+        poseDrivingControl.Driving();
+
+        if ((frameCount++) % log_refleshrate == 0) {
+            driveWheels->GetAngles(&angleLeft, &angleRight);
+            driveWheels->GetPWMs(&pwmLeft, &pwmRight);
+            fprintf(file,"%f,%f,%f,%f,%f,%d,%f,%d,%d,%f,%f,%f,%f,%f\n",
+                timer->GetValue(), envViewer->GetLuminance(), postureSensor.GetAnglerVelocity(),
+                0.0,0.0,
+                tail->GetPWM(),tail->GetAngle(),
+                pwmLeft, pwmRight, angleLeft, angleRight,
+                posSelf.x, posSelf.y, thetaSelf);
+        }
+    	gyro_sum += postureSensor.GetAnglerVelocity();
+        if(gyro_sum < -150){
+            break;
+        }
+        tslp_tsk(4);
+    }
     tslp_tsk(200);
 
-    poseDrivingControl.SetParams(0,0,65,false);
+    poseDrivingControl.SetParams(0,0,63,false);
     poseDrivingControl.SetStop(false,true,true);
     while(true){
-        if (abs(tail->GetAngle() - 65) <= 2) {
+        if (abs(tail->GetAngle() - 63) <= 2) {
             break;
         }
 
@@ -152,10 +172,9 @@ void PhaseLookUpGate::Execute(){
 
     // 1.7. 回転して、ラインを発見
     printf("PhaseLookUpGate 1.7.Turn to find line\n");
-
     envViewer->GetRGB(&r, &g, &b);
     if(g >= 17){ 
-        poseDrivingControl.SetParams(-10.0,100,60,false);
+        poseDrivingControl.SetParams(-10.0,100,63,false);
         // poseDrivingControl.SetStop(false,false,false);
         timer->Reset();
         while (true) {
@@ -187,7 +206,7 @@ void PhaseLookUpGate::Execute(){
 
         // poseDrivingControl.SetStop(false,false,false);
         while(true){
-            poseDrivingControl.SetParams(10,100,60,false);
+            poseDrivingControl.SetParams(10,100,63,false);
             poseDrivingControl.Driving();
 
             pos->UpdateSelfPos();
@@ -207,7 +226,7 @@ void PhaseLookUpGate::Execute(){
             }
 
             envViewer->GetRGB(&r, &g, &b);
-            if(g < 17){
+            if(g < 16){
                 break;
             }
 
@@ -223,8 +242,8 @@ void PhaseLookUpGate::Execute(){
     // poseDrivingControl.SetStop(false,false,false);
     while(abs(posSelf.x-startPos.x)<60){
 		line.CalcTurnValueByRGB();//CalcTurnValue();
-		turn = line.GetTurn();
-		poseDrivingControl.SetParams(20,turn,60,false);
+		turn = -1.0*line.GetTurn();
+		poseDrivingControl.SetParams(20,turn,63,false);
         poseDrivingControl.Driving();
 
 		pos->UpdateSelfPos();
@@ -246,22 +265,81 @@ void PhaseLookUpGate::Execute(){
         tslp_tsk(4);
     }
 	poseDrivingControl.SetStop(true,true,true);
-
     tslp_tsk(1000); // タイヤ完全停止待機
     
     printf("PhaseLookUpGate Clear Single\n");
     // ここまででシングル達成
 
-
-    // 3. そのまま後退
-    printf("PhaseLookUpGate 3.Backward\n");
-    poseDrivingControl.SetParams(-20,0.0,60,false);
+    // 3.1. その場回転して、ラインを発見
+    printf("PhaseLookUpGate 3.1.Turn\n");
+    poseDrivingControl.SetParams(10.0,100,63,false);
     // poseDrivingControl.SetStop(false,false,false);
-    while(abs(posSelf.x-startPos.x)>15){		
-        // line.CalcTurnValueByRGB();//CalcTurnValue();
-		// turn = line.GetTurn();
-		// poseDrivingControl.SetParams(-10,turn,65,false);
-		poseDrivingControl.Driving();
+    timer->Reset();
+    while (true) {
+        if (timer->Now()>1000) {
+            break;
+        }   
+
+        poseDrivingControl.Driving();
+
+        pos->UpdateSelfPos();
+        posSelf = pos->GetSelfPos();
+        thetaSelf = pos->GetTheta();
+
+        if ((frameCount++) % log_refleshrate == 0) {
+            driveWheels->GetAngles(&angleLeft, &angleRight);
+            driveWheels->GetPWMs(&pwmLeft, &pwmRight);
+            fprintf(file,"%f,%f,%f,%f,%f,%d,%f,%d,%d,%f,%f,%f,%f,%f\n",
+                timer->GetValue(), envViewer->GetLuminance(), postureSensor.GetAnglerVelocity(),
+                10.0,100.0,
+                tail->GetPWM(),tail->GetAngle(),
+                pwmLeft, pwmRight, angleLeft, angleRight,
+                posSelf.x, posSelf.y, thetaSelf);
+        }
+        
+        tslp_tsk(4);
+    }
+    poseDrivingControl.SetStop(true,true,true);
+    tslp_tsk(1000); // タイヤ完全停止待機
+
+    while(true){
+        poseDrivingControl.SetParams(10.0,100,63,false);
+        poseDrivingControl.Driving();
+
+        pos->UpdateSelfPos();
+        posSelf = pos->GetSelfPos();
+        thetaSelf = pos->GetTheta();
+
+        if ((frameCount++) % log_refleshrate == 0) {
+            driveWheels->GetAngles(&angleLeft, &angleRight);
+            driveWheels->GetPWMs(&pwmLeft, &pwmRight);
+            envViewer->GetRGB(&r, &g, &b);
+            fprintf(file,"%f,,%f,%f,%f,%d,%f,%d,%d,%f,%f,%f,%f,%f,%d,%d,%d\n",
+                timer->GetValue(), postureSensor.GetAnglerVelocity(),
+                10.0,100.0,
+                tail->GetPWM(),tail->GetAngle(),
+                pwmLeft, pwmRight, angleLeft, angleRight,
+                posSelf.x, posSelf.y, thetaSelf, r, g, b);
+        }
+
+        envViewer->GetRGB(&r, &g, &b);
+        if(g < 15){
+            break;
+        }
+
+        tslp_tsk(4);
+    }
+    poseDrivingControl.SetStop(true,true,true);
+    tslp_tsk(1000); // タイヤ完全停止待機
+
+    // 3.2. 前進して、ゲートを通過
+    printf("PhaseLookUpGate 3.5.Forward\n");
+    // poseDrivingControl.SetStop(false,false,false);
+    while(abs(posSelf.x-startPos.x)>15){
+		line.CalcTurnValueByRGB();//CalcTurnValue();
+		turn = -1.0*line.GetTurn();
+		poseDrivingControl.SetParams(20,turn,63,false);
+        poseDrivingControl.Driving();
 
 		pos->UpdateSelfPos();
 		posSelf = pos->GetSelfPos();
@@ -273,26 +351,116 @@ void PhaseLookUpGate::Execute(){
             envViewer->GetRGB(&r, &g, &b);
             fprintf(file,"%f,,%f,%f,%f,%d,%f,%d,%d,%f,%f,%f,%f,%f,%d,%d,%d\n",
                 timer->GetValue(), postureSensor.GetAnglerVelocity(),
-                -20.0,0.0,
+                20.0,turn,
                 tail->GetPWM(),tail->GetAngle(),
                 pwmLeft, pwmRight, angleLeft, angleRight,
                 posSelf.x, posSelf.y, thetaSelf, r, g, b);
-       }
+        }
+
+        tslp_tsk(4);
+    }
+
+    // // 3. そのまま後退
+    // printf("PhaseLookUpGate 3.Backward\n");
+    // poseDrivingControl.SetParams(-20,0.0,63,false);
+    // // poseDrivingControl.SetStop(false,false,false);
+    // while(abs(posSelf.x-startPos.x)>15){		
+    //     // line.CalcTurnValueByRGB();//CalcTurnValue();
+	// 	// turn = line.GetTurn();
+	// 	// poseDrivingControl.SetParams(-10,turn,65,false);
+	// 	poseDrivingControl.Driving();
+
+	// 	pos->UpdateSelfPos();
+	// 	posSelf = pos->GetSelfPos();
+	// 	thetaSelf = pos->GetTheta();
+
+    //     if ((frameCount++) % log_refleshrate == 0) {
+    //         driveWheels->GetAngles(&angleLeft, &angleRight);
+    //         driveWheels->GetPWMs(&pwmLeft, &pwmRight);
+    //         envViewer->GetRGB(&r, &g, &b);
+    //         fprintf(file,"%f,,%f,%f,%f,%d,%f,%d,%d,%f,%f,%f,%f,%f,%d,%d,%d\n",
+    //             timer->GetValue(), postureSensor.GetAnglerVelocity(),
+    //             -20.0,0.0,
+    //             tail->GetPWM(),tail->GetAngle(),
+    //             pwmLeft, pwmRight, angleLeft, angleRight,
+    //             posSelf.x, posSelf.y, thetaSelf, r, g, b);
+    //    }
        
-		tslp_tsk(4);
-    }	
-	// poseDrivingControl.SetStop(true,true,true);
-    
+	// 	tslp_tsk(4);
+    // }	
+	poseDrivingControl.SetStop(true,true,true);
     tslp_tsk(1000); // タイヤ完全停止待機
 
-    // 4. 前進して、再度ゲートを通過する
+    // 4.1. その場回転して、ラインを発見
+    printf("PhaseLookUpGate 4.1.Turn\n");
+    poseDrivingControl.SetParams(10.0,100,63,false);
+    // poseDrivingControl.SetStop(false,false,false);
+    timer->Reset();
+    while (true) {
+        if (timer->Now()>1000) {
+            break;
+        }   
+
+        poseDrivingControl.Driving();
+
+        pos->UpdateSelfPos();
+        posSelf = pos->GetSelfPos();
+        thetaSelf = pos->GetTheta();
+
+        if ((frameCount++) % log_refleshrate == 0) {
+            driveWheels->GetAngles(&angleLeft, &angleRight);
+            driveWheels->GetPWMs(&pwmLeft, &pwmRight);
+            fprintf(file,"%f,%f,%f,%f,%f,%d,%f,%d,%d,%f,%f,%f,%f,%f\n",
+                timer->GetValue(), envViewer->GetLuminance(), postureSensor.GetAnglerVelocity(),
+                10.0,100.0,
+                tail->GetPWM(),tail->GetAngle(),
+                pwmLeft, pwmRight, angleLeft, angleRight,
+                posSelf.x, posSelf.y, thetaSelf);
+        }
+        
+        tslp_tsk(4);
+    }
+    poseDrivingControl.SetStop(true,true,true);
+    tslp_tsk(1000); // タイヤ完全停止待機
+
+    while(true){
+        poseDrivingControl.SetParams(10.0,100,63,false);
+        poseDrivingControl.Driving();
+
+        pos->UpdateSelfPos();
+        posSelf = pos->GetSelfPos();
+        thetaSelf = pos->GetTheta();
+
+        if ((frameCount++) % log_refleshrate == 0) {
+            driveWheels->GetAngles(&angleLeft, &angleRight);
+            driveWheels->GetPWMs(&pwmLeft, &pwmRight);
+            envViewer->GetRGB(&r, &g, &b);
+            fprintf(file,"%f,,%f,%f,%f,%d,%f,%d,%d,%f,%f,%f,%f,%f,%d,%d,%d\n",
+                timer->GetValue(), postureSensor.GetAnglerVelocity(),
+                10.0,100.0,
+                tail->GetPWM(),tail->GetAngle(),
+                pwmLeft, pwmRight, angleLeft, angleRight,
+                posSelf.x, posSelf.y, thetaSelf, r, g, b);
+        }
+
+        envViewer->GetRGB(&r, &g, &b);
+        if(g < 15){
+            break;
+        }
+
+        tslp_tsk(4);
+    }
+    poseDrivingControl.SetStop(true,true,true);
+    tslp_tsk(1000); // タイヤ完全停止待機
+
+    // 4.2 前進して、再度ゲートを通過する
     printf("PhaseLookUpGate 4.Forward Double\n");
     // poseDrivingControl.SetStop(false,false,false);
     // poseDrivingControl.SetParams(20,0,65,false);
     while(abs(posSelf.x-startPos.x)<60){
 		line.CalcTurnValueByRGB();//CalcTurnValue();
-		turn = line.GetTurn();
-		poseDrivingControl.SetParams(20,turn,60,false);
+		turn = -1.0*line.GetTurn();
+		poseDrivingControl.SetParams(20,turn,63,false);
 		poseDrivingControl.Driving();
 
 		pos->UpdateSelfPos();
@@ -323,8 +491,8 @@ void PhaseLookUpGate::Execute(){
     // ガレージに入るとこまで
     while(abs(posSelf.x-startPos.x)<60+85){
 		line.CalcTurnValueByRGB();//CalcTurnValue();
-		turn = line.GetTurn();
-		poseDrivingControl.SetParams(20,turn,60,false);
+		turn = -1.0*line.GetTurn();
+		poseDrivingControl.SetParams(20,turn,63,false);
 		poseDrivingControl.Driving();
 
 		pos->UpdateSelfPos();
