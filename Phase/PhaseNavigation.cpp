@@ -74,19 +74,17 @@ void PhaseNavigation::Execute(){
 	pos->UpdateSelfPos();
 	posSelf = pos->GetSelfPos();
 	thetaSelf = pos->GetTheta();
-	printf("%f,%f,%f,%f,%f,%f,%d,%f,%d,%d,%f,%f,%f,%f,%f\n",
-		cl->GetValue(), envViewer->GetLuminance(), postureSensor.GetAnglerVelocity(),envViewer->GetUSDistance(),
-		0.0,0.0,
-		tail->GetPWM(),tail->GetAngle(),
-		pwmLeft, pwmRight, angleLeft, angleRight,
-		posSelf.x, posSelf.y, thetaSelf);
 
 	// 1. 尻尾スタートダッシュ
 	printf("PhaseNavigation 1.StartDash\n");
-	poseDrivingControl.SetParams(0.0,0.0,92,false);
+	int tmp_high_speed_start_forward = 0;
+	int tmp_high_speed_start_cnt = 0;
+	int tmp_high_speed_gyro_sum = 0;
+
+	poseDrivingControl.SetParams(tmp_high_speed_start_forward,0.0,102,false);
 	poseDrivingControl.SetStop(false,false,false);
     cl->Reset();
-	while(cl->Now()<90){
+	while(true){
 		poseDrivingControl.Driving();
 
 		pos->UpdateSelfPos();
@@ -103,12 +101,25 @@ void PhaseNavigation::Execute(){
 					pwmLeft, pwmRight, angleLeft, angleRight,
 					posSelf.x, posSelf.y, thetaSelf);
 		}     
+    	tmp_high_speed_gyro_sum += postureSensor.GetAnglerVelocity();
+    	//切り替え条件成立かチェック
+        //5ms×10回≒50msマスクする→検討した結果から決定
+        if( tmp_high_speed_start_cnt < 10 ){
+        	//所定回数≒所定時間経過待ち
+    	}else{
+    		//所定回数≒所定時間経過した
+        	if( tmp_high_speed_gyro_sum > 900 ){
+    			//角速度80より大きくなったら次の処理
+    			break;
+    		}
+    	}
+        tmp_high_speed_start_cnt++;
 		tslp_tsk(4);
 	}
 
 	// 2. 初期安定化前進
 	printf("PhaseNavigation 2.BalanceForward\n");
-	poseDrivingControl.SetParams(45.0,0,3,true);
+	poseDrivingControl.SetParams(100.0,0,45,true);
 	driveWheels->GetAngles(&angleLeft, &angleRight);
     while (true){
 		poseDrivingControl.Driving();
@@ -122,7 +133,7 @@ void PhaseNavigation::Execute(){
 				driveWheels->GetPWMs(&pwmLeft, &pwmRight);
 				fprintf(file,"%f,%f,%f,%f,%f,%f,%d,%f,%d,%d,%f,%f,%f,%f,%f\n",
 					cl->GetValue(), envViewer->GetLuminance(), postureSensor.GetAnglerVelocity(),envViewer->GetUSDistance(),
-					25.0,0.0,
+					45.0,0.0,
 					tail->GetPWM(),tail->GetAngle(),
 					pwmLeft, pwmRight, angleLeft, angleRight,
 					posSelf.x, posSelf.y, thetaSelf);
@@ -142,7 +153,7 @@ void PhaseNavigation::Execute(){
     while (true) {        
 		line.CalcTurnValue();
 		turn = line.GetTurn();
-		poseDrivingControl.SetParams(95.0,turn,3,true);
+		poseDrivingControl.SetParams(90.0,turn,45,true);
 		poseDrivingControl.Driving();
 
 		pos->UpdateSelfPos();
@@ -154,7 +165,7 @@ void PhaseNavigation::Execute(){
 				driveWheels->GetPWMs(&pwmLeft, &pwmRight);
 				fprintf(file,"%f,%f,%f,%f,%f,%f,%d,%f,%d,%d,%f,%f,%f,%f,%f\n",
 					cl->GetValue(), envViewer->GetLuminance(), postureSensor.GetAnglerVelocity(),envViewer->GetUSDistance(),
-					75.0,0.0,
+					95.0,turn,
 					tail->GetPWM(),tail->GetAngle(),
 					pwmLeft, pwmRight, angleLeft, angleRight,
 					posSelf.x, posSelf.y, thetaSelf);
@@ -167,7 +178,18 @@ void PhaseNavigation::Execute(){
         frameCount++;  
         tslp_tsk(4);
     }
+
+	// driveWheels->GetAngles(&angleLeft, &angleRight);
+	// driveWheels->GetPWMs(&pwmLeft, &pwmRight);
+	// fprintf(file,"%f,%f,%f,%f,%f,%f,%d,%f,%d,%d,%f,%f,%f,%f,%f\n",
+	// 	cl->GetValue(), envViewer->GetLuminance(), postureSensor.GetAnglerVelocity(),envViewer->GetUSDistance(),
+	// 	95.0,turn,
+	// 	tail->GetPWM(),tail->GetAngle(),
+	// 	pwmLeft, pwmRight, angleLeft, angleRight,
+	// 	posSelf.x, posSelf.y, thetaSelf);
+	// fclose(file);
     
+    // ev3_speaker_play_tone(NOTE_C4, 100);
 	finFlg = true;
 	printf("PhaseNavigation Execute done\n");
 }
@@ -176,8 +198,8 @@ bool PhaseNavigation::IsFinish(Vector2D posSelf) {
     if(this->course=='R'){//R(Seesaw)
         return (posSelf.x < 170 && posSelf.y < 180) || (envViewer->GetTouch()||envViewer->GetUSDistance()<15);
     }else if(this->course=='L'){//L(LookUpGate)
-        // return (posSelf.x > -5 && posSelf.y < -80);
-		return (posSelf.x < 137 && posSelf.y > 335.0) || (envViewer->GetTouch()||envViewer->GetUSDistance()<15);
+		// return (posSelf.x < 137 && posSelf.y > 335.0) || (envViewer->GetTouch()||envViewer->GetUSDistance()<15);
+		return (posSelf.x < 0.0 && posSelf.y > 80.0);
     }
     return (envViewer->GetTouch()||envViewer->GetUSDistance()<15);
 }

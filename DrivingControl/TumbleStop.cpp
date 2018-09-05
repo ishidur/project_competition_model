@@ -1,9 +1,12 @@
 #include "TumbleStop.h"
 
-namespace DrivingControl
-{
+using namespace DrivingControl;
+using namespace AppliedHardware::VehicleHardware;
 
-void TumbleStop::TumbleStopTask()
-{
+TumbleStop::TumbleStop() : count(0){
+    driveWheels = DriveWheels::GetInstance();
 }
-}  // namespace DrivingControl
+
+void TumbleStop::TumbleStopTask(){
+    
+}

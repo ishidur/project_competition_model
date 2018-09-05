@@ -84,3 +84,7 @@ void initialize(){
     ev3_gyro_sensor_reset(gyro_sensor);
     balance_init();
 }
+
+void tumble_cyc(intptr_t exinf){
+
+}

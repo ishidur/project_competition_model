@@ -3,7 +3,6 @@
 
 using namespace Phase;
 PhaseGenerater::PhaseGenerater(): nowPhaseNum(0) {
-	printf("PhaseGenerater constructer\n");   
 	const char* filename = "/ev3rt/res/course/course.txt";
 	if(!ReadCourse(filename)){
 		printf("no file %s!\n", filename);
@@ -42,14 +41,12 @@ PhaseGenerater::PhaseGenerater(): nowPhaseNum(0) {
 }
 
 PhaseBase* PhaseGenerater::GetNextPhase(){
-	printf("PhaseGenerater GetNextPhase: %d\n", nowPhaseNum);
 	PhaseBase* p = phaseList[nowPhaseNum];
 	if(p!=nullptr) nowPhaseNum++; 
 	return p;
 }
 
 bool PhaseGenerater::IsFinishAllPhase(){
-	printf("PhaseGenerater IsFinishAllPhase: %d\n", (phaseList[nowPhaseNum]==nullptr));
 	return phaseList[nowPhaseNum]==nullptr;
 }
 
