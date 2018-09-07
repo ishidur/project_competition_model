@@ -40,7 +40,9 @@ extern "C" {
 #ifndef TOPPERS_MACRO_ONLY
 
 extern void main_task(intptr_t exinf);
+extern void phase_task(intptr_t exinf);
 extern void com_task(intptr_t exinf);
+extern void tumble_task(intptr_t exinf);
 extern void tumble_cyc(intptr_t exinf);
 
 #endif /* TOPPERS_MACRO_ONLY */

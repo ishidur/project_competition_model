@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "../Utilities/Vector2D.h"
+#include "../EnvironmentMeasurement/LineLuminance.h"
 
 using namespace Phase;
 using namespace AppliedHardware::VehicleHardware;
@@ -10,6 +11,9 @@ using namespace AppliedHardware::EnvironmentSensor;
 using namespace BaseHardware;
 using namespace Positioning::Localization;
 using namespace Utilities;
+using namespace EnvironmentMeasurement;
+
+#define TAIL_ANGLE 45
 
 PhaseSeesaw::PhaseSeesaw(){
 	pos = SelfPos::GetInstance();
@@ -23,6 +27,8 @@ PhaseSeesaw::PhaseSeesaw(){
 void PhaseSeesaw::Execute(){
 	printf("PhaseSeesaw Execute\n");
 	
+	LineLuminance line;
+
     FILE* file;
     char filename[255] = {};
     sprintf(filename, "/ev3rt/res/log_data_seesaw.csv");
@@ -33,6 +39,7 @@ void PhaseSeesaw::Execute(){
 
 	float angleLeft=0.0, angleRight=0.0;
 	signed char pwmLeft=0, pwmRight=0;
+	float turn;
 
 	poseDrivingControl.SetStop(false,false,false);
 	
@@ -49,11 +56,13 @@ void PhaseSeesaw::Execute(){
 
     	//倒立振子で前進
     	if( IsStartFoward( posSelf.x ) == true ){
-			poseDrivingControl.SetParams(tmp_foward,0,3,true);
+			poseDrivingControl.SetParams(tmp_foward,0,TAIL_ANGLE,true);
     	}
     	//まずはライントレース
     	else{
-			poseDrivingControl.SetParams(tmp_foward,0,3,false);
+			line.CalcTurnValue();
+			turn = line.GetTurn();
+			poseDrivingControl.SetParams(tmp_foward,turn,TAIL_ANGLE,true);
     	}
 		poseDrivingControl.Driving();
 
@@ -85,7 +94,7 @@ void PhaseSeesaw::Execute(){
 	tmp_stop_cnt = 0;
 	tmp_foward = 0;
 	float gyro_sum = 0;
-	poseDrivingControl.SetParams(tmp_foward,0,3,false);
+	poseDrivingControl.SetParams(tmp_foward,0,TAIL_ANGLE,true);
     while (true) {
 
         //自己位置更新
@@ -128,7 +137,7 @@ void PhaseSeesaw::Execute(){
     //シーソー検討
     //foward100で乗り上げ
 	tmp_foward = 100;
-	poseDrivingControl.SetParams(tmp_foward,0,3,true);
+	poseDrivingControl.SetParams(tmp_foward,0,TAIL_ANGLE,true);
 	while (true) {
 
         //自己位置更新
@@ -163,7 +172,7 @@ void PhaseSeesaw::Execute(){
 
     //乗り上げ後は、foward40でゆっくり進む
 	tmp_foward = 40;
-	poseDrivingControl.SetParams(tmp_foward,0,3,true);
+	poseDrivingControl.SetParams(tmp_foward,0,TAIL_ANGLE,true);
 	while (true) {
 
         //自己位置更新
@@ -196,7 +205,7 @@ void PhaseSeesaw::Execute(){
 
     //シーソー下り開始に合わせて、foward=-40でシーソー上で停止 or バックさせる
 	tmp_foward = -40;
-	poseDrivingControl.SetParams(tmp_foward,0,3,true);
+	poseDrivingControl.SetParams(tmp_foward,0,TAIL_ANGLE,true);
 	while (true) {
 
         //自己位置更新
@@ -228,7 +237,7 @@ void PhaseSeesaw::Execute(){
 
 	//シーソーから降りて前進する foward 70
 	tmp_foward = 70;
-	poseDrivingControl.SetParams(tmp_foward,0,3,true);
+	poseDrivingControl.SetParams(tmp_foward,0,TAIL_ANGLE,true);
 	while (true) {
 		pos->UpdateSelfPos();
 		posSelf = pos->GetSelfPos();
@@ -253,6 +262,7 @@ void PhaseSeesaw::Execute(){
 		tslp_tsk(4);
 	}
 
+	// 着地
     int tau = 1000;	
     timer->Reset();
 	poseDrivingControl.SetParams(-50.0,0,65,true);
