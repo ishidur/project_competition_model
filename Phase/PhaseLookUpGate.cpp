@@ -513,13 +513,16 @@ void PhaseLookUpGate::Execute(){
 
         tslp_tsk(4);
     }
+    poseDrivingControl.SetStop(true,true,true);
+    tslp_tsk(1000); // タイヤ完全停止待機
+    poseDrivingControl.SetStop(false,false,false);
 
     // 起き上がり
     while(true){
         if (abs(tail->GetAngle() - 75) < 2) {
             break;
         }
-        poseDrivingControl.SetParams(-30,0,75,false);
+        poseDrivingControl.SetParams(-20,0,75,false);
         poseDrivingControl.Driving();
 
         pos->UpdateSelfPos();

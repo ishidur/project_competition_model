@@ -20,6 +20,10 @@ PhaseSeesaw::PhaseSeesaw(){
 	timer = Timer::GetInstance();
 }
 
+// 大きく加速
+// 尻尾下ろし
+// ゆっくり前進
+
 void PhaseSeesaw::Execute(){
 	printf("PhaseSeesaw Execute\n");
 	
