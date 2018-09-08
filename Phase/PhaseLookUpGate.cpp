@@ -22,11 +22,6 @@ using namespace EnvironmentMeasurement;
 
 PhaseLookUpGate::PhaseLookUpGate(){
 	pos = SelfPos::GetInstance();
-    // ログ用ファイル生成
-    char filename[255] = {};
-    sprintf(filename, "/ev3rt/res/log_data_lookupgate.csv");
-    file = fopen(filename, "w");
-    fprintf(file,"timer,caribratedBrightness,gyroSensor,power,turn,PWMt,motor_ang_t,PWMl,PWMr,motor_ang_l,motor_ang_r,xEst,yEst,thetaSelf,r,g,b\n");
 }
 
 void PhaseLookUpGate::Execute(){
@@ -42,6 +37,11 @@ void PhaseLookUpGate::Execute(){
 	DriveWheels* driveWheels = DriveWheels::GetInstance();
 
 	LineLuminance line;
+    // ログ用ファイル生成
+    char filename[255] = {};
+    sprintf(filename, "/ev3rt/res/log_data_lookupgate.csv");
+    file = fopen(filename, "w");
+    fprintf(file,"timer,caribratedBrightness,gyroSensor,power,turn,PWMt,motor_ang_t,PWMl,PWMr,motor_ang_l,motor_ang_r,xEst,yEst,thetaSelf,r,g,b\n");
 
     int frameCount = 0;
     const int log_refleshrate = 15;
@@ -206,7 +206,7 @@ void PhaseLookUpGate::Execute(){
 
         // poseDrivingControl.SetStop(false,false,false);
         while(true){
-            poseDrivingControl.SetParams(10,100,63,false);
+            poseDrivingControl.SetParams(20,100,63,false);
             poseDrivingControl.Driving();
 
             pos->UpdateSelfPos();
@@ -219,7 +219,7 @@ void PhaseLookUpGate::Execute(){
                 envViewer->GetRGB(&r, &g, &b);
                 fprintf(file,"%f,,%f,%f,%f,%d,%f,%d,%d,%f,%f,%f,%f,%f,%d,%d,%d\n",
                     timer->GetValue(), postureSensor.GetAnglerVelocity(),
-                    10.0,100.0,
+                    20.0,100.0,
                     tail->GetPWM(),tail->GetAngle(),
                     pwmLeft, pwmRight, angleLeft, angleRight,
                     posSelf.x, posSelf.y, thetaSelf, r, g, b);
@@ -240,7 +240,8 @@ void PhaseLookUpGate::Execute(){
     // 2. 前進して、ゲートを通過
     printf("PhaseLookUpGate 2.Forward\n");
     // poseDrivingControl.SetStop(false,false,false);
-    while(abs(posSelf.x-startPos.x)<60){
+    while(posSelf.DistanceFrom(startPos)<60){
+    // while(abs(posSelf.x-startPos.x)<60){
 		line.CalcTurnValueByRGB();//CalcTurnValue();
 		turn = -1.0*line.GetTurn();
 		poseDrivingControl.SetParams(20,turn,63,false);
@@ -303,7 +304,7 @@ void PhaseLookUpGate::Execute(){
     tslp_tsk(1000); // タイヤ完全停止待機
 
     while(true){
-        poseDrivingControl.SetParams(10.0,100,63,false);
+        poseDrivingControl.SetParams(20.0,100,63,false);
         poseDrivingControl.Driving();
 
         pos->UpdateSelfPos();
@@ -316,7 +317,7 @@ void PhaseLookUpGate::Execute(){
             envViewer->GetRGB(&r, &g, &b);
             fprintf(file,"%f,,%f,%f,%f,%d,%f,%d,%d,%f,%f,%f,%f,%f,%d,%d,%d\n",
                 timer->GetValue(), postureSensor.GetAnglerVelocity(),
-                10.0,100.0,
+                20.0,100.0,
                 tail->GetPWM(),tail->GetAngle(),
                 pwmLeft, pwmRight, angleLeft, angleRight,
                 posSelf.x, posSelf.y, thetaSelf, r, g, b);
@@ -335,7 +336,8 @@ void PhaseLookUpGate::Execute(){
     // 3.2. 前進して、ゲートを通過
     printf("PhaseLookUpGate 3.5.Forward\n");
     // poseDrivingControl.SetStop(false,false,false);
-    while(abs(posSelf.x-startPos.x)>15){
+    // while(abs(posSelf.x-startPos.x)>15){
+    while(posSelf.DistanceFrom(startPos)>15){
 		line.CalcTurnValueByRGB();//CalcTurnValue();
 		turn = -1.0*line.GetTurn();
 		poseDrivingControl.SetParams(20,turn,63,false);
@@ -424,7 +426,7 @@ void PhaseLookUpGate::Execute(){
     tslp_tsk(1000); // タイヤ完全停止待機
 
     while(true){
-        poseDrivingControl.SetParams(10.0,100,63,false);
+        poseDrivingControl.SetParams(20.0,100,63,false);
         poseDrivingControl.Driving();
 
         pos->UpdateSelfPos();
@@ -437,7 +439,7 @@ void PhaseLookUpGate::Execute(){
             envViewer->GetRGB(&r, &g, &b);
             fprintf(file,"%f,,%f,%f,%f,%d,%f,%d,%d,%f,%f,%f,%f,%f,%d,%d,%d\n",
                 timer->GetValue(), postureSensor.GetAnglerVelocity(),
-                10.0,100.0,
+                20.0,100.0,
                 tail->GetPWM(),tail->GetAngle(),
                 pwmLeft, pwmRight, angleLeft, angleRight,
                 posSelf.x, posSelf.y, thetaSelf, r, g, b);
@@ -457,7 +459,8 @@ void PhaseLookUpGate::Execute(){
     printf("PhaseLookUpGate 4.Forward Double\n");
     // poseDrivingControl.SetStop(false,false,false);
     // poseDrivingControl.SetParams(20,0,65,false);
-    while(abs(posSelf.x-startPos.x)<60){
+    while(posSelf.DistanceFrom(startPos)<60){
+    // while(abs(posSelf.x-startPos.x)<60){
 		line.CalcTurnValueByRGB();//CalcTurnValue();
 		turn = -1.0*line.GetTurn();
 		poseDrivingControl.SetParams(20,turn,63,false);
@@ -489,7 +492,8 @@ void PhaseLookUpGate::Execute(){
      // これでダブル
 
     // ガレージに入るとこまで
-    while(abs(posSelf.x-startPos.x)<60+85){
+    while(posSelf.DistanceFrom(startPos)<60+85){
+    // while(abs(posSelf.x-startPos.x)<60+85){
 		line.CalcTurnValueByRGB();//CalcTurnValue();
 		turn = -1.0*line.GetTurn();
 		poseDrivingControl.SetParams(20,turn,63,false);
