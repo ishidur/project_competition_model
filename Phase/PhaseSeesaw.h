@@ -35,12 +35,12 @@ namespace Phase{
 			bool IsFinish();
 
 		private:
-			bool IsStartFoward( float _x );
+			bool IsStartForward( float _x );
 			bool IsStartEnter( float _x );
-			bool IsStartSlowFoward( float _x );
-			bool IsStartBackFoward( float _x );
-			bool IsStartStopFoward( float _x );
-			bool IsEndStopFoward( float _x );
+			bool IsStartSlowForward( float _x );
+			bool IsStartBackForward( float _x );
+			bool IsStartStopForward( float _x );
+			bool IsEndStopForward( float _x );
 	};
 
 }  // namespace Phase

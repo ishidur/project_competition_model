@@ -13,7 +13,7 @@ using namespace Positioning::Localization;
 using namespace Utilities;
 using namespace EnvironmentMeasurement;
 
-#define TAIL_ANGLE 45
+#define TAIL_ANGLE (45)
 
 PhaseSeesaw::PhaseSeesaw(){
 	pos = SelfPos::GetInstance();
@@ -35,54 +35,53 @@ void PhaseSeesaw::Execute(){
     file = fopen(filename, "w");
     
     Vector2D posSelf(0,0);
-    float thetaSelf=-3.141592/2;
+	pos->UpdateSelfPos();
+	posSelf = pos->GetSelfPos();
+    float thetaSelf = pos->GetTheta();
+	Vector2D startPos = pos->GetSelfPos();
+	printf("start (x,y) = (%f, %f)\n", startPos.x, startPos.y);
 
 	float angleLeft=0.0, angleRight=0.0;
 	signed char pwmLeft=0, pwmRight=0;
 	float turn;
+	float gyro_sum = 0.0;
 
-	poseDrivingControl.SetStop(false,false,false);
+	int log_refleshrate = 5;
+
+	poseDrivingControl.SetStop(true,false,false);
 	
 	timer->Reset();
 
-    //foward切り替え位置までfoward =70で進むx=60
-	int tmp_foward = 70;
+    // 1. forward切り替え位置までforward=70で進むx=60
+	printf("PhaseSeesaw 1. Forward\n"); 
+	int tmp_forward = 30;
     while (true) {
-
-        //自己位置更新
 		pos->UpdateSelfPos();
 		posSelf = pos->GetSelfPos();
 		thetaSelf = pos->GetTheta();
 
-    	//倒立振子で前進
-    	if( IsStartFoward( posSelf.x ) == true ){
-			poseDrivingControl.SetParams(tmp_foward,0,TAIL_ANGLE,true);
-    	}
-    	//まずはライントレース
-    	else{
+    	if(posSelf.DistanceFrom(startPos)>26.0-10.0){ // 倒立振子で前進
+			poseDrivingControl.SetParams(tmp_forward,0,TAIL_ANGLE,true);
+    	}else{ // まずはライントレース
 			line.CalcTurnValue();
 			turn = line.GetTurn();
-			poseDrivingControl.SetParams(tmp_foward,turn,TAIL_ANGLE,true);
+			poseDrivingControl.SetParams(tmp_forward,turn,TAIL_ANGLE,true);
     	}
 		poseDrivingControl.Driving();
 
         //ログは10回に1回出力する
-        tmp_log_cnt++;
-    	if( tmp_log_cnt > 10 ){
+    	if( (tmp_log_cnt++) > log_refleshrate ){
             driveWheels->GetAngles(&angleLeft, &angleRight);
             driveWheels->GetPWMs(&pwmLeft, &pwmRight);
-			fprintf(file,"%f,%f,%f,%f,%f,%d,%d,%d,%f\n",
-           		timer->Now(), posSelf.x, posSelf.y, angleLeft, angleRight, pwmLeft, pwmRight,  tmp_foward, postureSensor.GetAnglerVelocity());
+			fprintf(file,"%f,%f,%f,%f,%d,%f,%f,%d,%d,%d,%f\n",
+           		timer->GetValue(), posSelf.x, posSelf.y, tail->GetAngle(),tail->GetPWM(),angleLeft, angleRight, pwmLeft, pwmRight,  tmp_forward, postureSensor.GetAnglerVelocity());
 	        tmp_log_cnt=0;
 		}
 
     	//切り替え位置到達かチェック
-    	if( IsStartEnter( posSelf.x ) == true ){
-    		//到達したので終了
-    		break;
-    	}
-    	else{
-    		//到達していないので待つ
+    	// if( IsStartEnter( posSelf.x ) == true ){
+		if(posSelf.DistanceFrom(startPos)>26.0){
+    		break; //到達したので終了
     	}
 
     	tslp_tsk(4);
@@ -90,79 +89,309 @@ void PhaseSeesaw::Execute(){
     //※切り替え位置到達時はwhileのtslp_tsk(4)が実行されないので所定時間待つこと
 	tslp_tsk(4);
 
-    //傾ける
+    // 2. 傾く
+	printf("PhaseSeesaw 2. Tilting\n"); 
 	tmp_stop_cnt = 0;
-	tmp_foward = 0;
-	float gyro_sum = 0;
-	poseDrivingControl.SetParams(tmp_foward,0,TAIL_ANGLE,true);
+	tmp_forward = 0; //PWM = 0を出力（※gyroの更新ありに変更した）
+	gyro_sum = 0;
+	poseDrivingControl.SetStop(false,false,false);
+	poseDrivingControl.SetParams(tmp_forward,0,105,false);
+	timer->Reset();
     while (true) {
-
-        //自己位置更新
 		pos->UpdateSelfPos();
 		posSelf = pos->GetSelfPos();
 		thetaSelf = pos->GetTheta();
 
-        //PWM = 0を出力（※gyroの更新ありに変更した）
 		poseDrivingControl.Driving();		
 
-        //ログは10回に1回出力する
-        tmp_log_cnt++;
-    	if( tmp_log_cnt > 0){
-			fprintf(file,"%f,%f,%f,%f,%f,%d,%d,%d,%f\n",
-           		timer->Now(), posSelf.x, posSelf.y, angleLeft, angleRight, pwmLeft, pwmRight,  tmp_foward, postureSensor.GetAnglerVelocity());
+    	if( (tmp_log_cnt++) > log_refleshrate){
+            driveWheels->GetAngles(&angleLeft, &angleRight);
+            driveWheels->GetPWMs(&pwmLeft, &pwmRight);
+			fprintf(file,"%f,%f,%f,%f,%d,%f,%f,%d,%d,%d,%f\n",
+           		timer->GetValue(), posSelf.x, posSelf.y, tail->GetAngle(),tail->GetPWM(),angleLeft, angleRight, pwmLeft, pwmRight,  tmp_forward, postureSensor.GetAnglerVelocity());
 	        tmp_log_cnt=0;
 		}
-    	gyro_sum += postureSensor.GetAnglerVelocity();
 
     	//切り替え条件成立かチェック
         //5ms×30回≒150msマスクする→検討した結果から決定
-        if( tmp_stop_cnt < 10 ){
-        	//所定回数≒所定時間経過待ち
-    	}
-        else{
-    		//所定回数≒所定時間経過した
-//    		if( GyroSensor::anglerVelocity > 70 ){
-        	if( gyro_sum > 800 ){
-    			//角速度80より大きくなったら次の処理
-    			break;
-    		}
-    	}
-    	tmp_stop_cnt++;
+		// if(timer->Now()>3000){    			
+		if( (tmp_stop_cnt++) >= 10){
+			gyro_sum += postureSensor.GetAnglerVelocity();
+			if( gyro_sum > 1300 ){//角速度80より大きくなったら次の処理    			
+				break;
+			}
+		}
+	
     	tslp_tsk(4);
     }
+
+	// 1. 尻尾で着地
+	// printf("PhaseSeesaw 1.Deceleration to Land\n"); 
+    // timer->Reset();
+    // int tau = 500;	
+	// poseDrivingControl.SetParams(-50.0,0,75,true);
+    // while (true) {
+    //     if (timer->Now()>tau) {
+    //         break;
+    //     }   
+
+	// 	poseDrivingControl.Driving();
+
+	// 	pos->UpdateSelfPos();
+	// 	posSelf = pos->GetSelfPos();
+	// 	thetaSelf = pos->GetTheta();
+
+    //     if ((tmp_log_cnt++) > log_refleshrate) {
+    //         driveWheels->GetAngles(&angleLeft, &angleRight);
+    //         driveWheels->GetPWMs(&pwmLeft, &pwmRight);
+    //         fprintf(file,"%f,%f,%f,%f,%f,%d,%f,%d,%d,%f,%f,%f,%f,%f\n",
+    //             timer->GetValue(), envViewer->GetLuminance(), postureSensor.GetAnglerVelocity(),
+    //             -50.0,0.0,
+    //             tail->GetPWM(),tail->GetAngle(),
+    //             pwmLeft, pwmRight, angleLeft, angleRight,
+    //             posSelf.x, posSelf.y, thetaSelf);
+	// 		tmp_log_cnt = 0;
+    //     }
+        
+    //     tslp_tsk(4);
+    // }
+	// poseDrivingControl.SetParams(-10,0,75,true);
+    // while(true){
+    //     if (abs(tail->GetAngle() - 75) <= 2) {
+    //         break;
+    //     }
+
+	// 	poseDrivingControl.Driving();
+
+	// 	pos->UpdateSelfPos();
+	// 	posSelf = pos->GetSelfPos();
+	// 	thetaSelf = pos->GetTheta();
+
+    //     if ((tmp_log_cnt++) > log_refleshrate) {
+    //         driveWheels->GetAngles(&angleLeft, &angleRight);
+    //         driveWheels->GetPWMs(&pwmLeft, &pwmRight);
+    //         fprintf(file,"%f,%f,%f,%f,%f,%d,%f,%d,%d,%f,%f,%f,%f,%f\n",
+    //             timer->GetValue(), envViewer->GetLuminance(), postureSensor.GetAnglerVelocity(),
+    //             0.0,0.0,
+    //             tail->GetPWM(),tail->GetAngle(),
+    //             pwmLeft, pwmRight, angleLeft, angleRight,
+    //             posSelf.x, posSelf.y, thetaSelf);
+	// 		tmp_log_cnt = 0;
+    //     }
+         
+    //     tslp_tsk(4);
+    // }
+    // poseDrivingControl.SetStop(true,true,true);
+
+	// printf("PhaseSeesaw 1.2.Landing\n"); 
+	// gyro_sum = 0.0;
+    // poseDrivingControl.SetParams(10,0,75,false);
+    // while(1){
+    //     poseDrivingControl.Driving();
+
+    //     if ((tmp_log_cnt++) > log_refleshrate) {
+    //         driveWheels->GetAngles(&angleLeft, &angleRight);
+    //         driveWheels->GetPWMs(&pwmLeft, &pwmRight);
+    //         fprintf(file,"%f,%f,%f,%f,%f,%d,%f,%d,%d,%f,%f,%f,%f,%f\n",
+    //             timer->GetValue(), envViewer->GetLuminance(), postureSensor.GetAnglerVelocity(),
+    //             0.0,0.0,
+    //             tail->GetPWM(),tail->GetAngle(),
+    //             pwmLeft, pwmRight, angleLeft, angleRight,
+    //             posSelf.x, posSelf.y, thetaSelf);
+	// 		tmp_log_cnt = 0;
+    //     }
+    // 	gyro_sum += postureSensor.GetAnglerVelocity();
+    //     if(gyro_sum < -150){
+    //         break;
+    //     }
+    //     tslp_tsk(4);
+    // }
+    // poseDrivingControl.SetStop(true,true,true);
+    // tslp_tsk(1000); // タイヤ完全停止待機
+
+    // // 2. 回転して、ラインを発見
+	// printf("PhaseSeesaw 2. Find Line\n"); 
+    // if(envViewer->GetLuminance() >= 50){ 
+    //     poseDrivingControl.SetParams(-10.0,100,75,false);
+    //     timer->Reset();
+    //     while (true) {
+    //         if (timer->Now()>700) {
+    //             break;
+    //         }   
+
+    //         poseDrivingControl.Driving();
+
+    //         pos->UpdateSelfPos();
+    //         posSelf = pos->GetSelfPos();
+    //         thetaSelf = pos->GetTheta();
+
+    //         if ((tmp_log_cnt++) > log_refleshrate) {
+    //             driveWheels->GetAngles(&angleLeft, &angleRight);
+    //             driveWheels->GetPWMs(&pwmLeft, &pwmRight);
+    //             fprintf(file,"%f,%f,%f,%f,%f,%d,%f,%d,%d,%f,%f,%f,%f,%f\n",
+    //                 timer->GetValue(), envViewer->GetLuminance(), postureSensor.GetAnglerVelocity(),
+    //                 -50.0,0.0,
+    //                 tail->GetPWM(),tail->GetAngle(),
+    //                 pwmLeft, pwmRight, angleLeft, angleRight,
+    //                 posSelf.x, posSelf.y, thetaSelf);
+	// 			tmp_log_cnt = 0;
+    //         }
+            
+    //         tslp_tsk(4);
+    //     }
+    //     poseDrivingControl.SetStop(true,true,true);
+    //     tslp_tsk(1000); // タイヤ完全停止待機
+
+    //     // poseDrivingControl.SetStop(false,false,false);
+    //     while(true){
+    //         poseDrivingControl.SetParams(10,100,75,false);
+    //         poseDrivingControl.Driving();
+
+    //         pos->UpdateSelfPos();
+    //         posSelf = pos->GetSelfPos();
+    //         thetaSelf = pos->GetTheta();
+
+    //         if ((tmp_log_cnt++) > log_refleshrate) {
+    //             driveWheels->GetAngles(&angleLeft, &angleRight);
+    //             driveWheels->GetPWMs(&pwmLeft, &pwmRight);
+    //             fprintf(file,"%f,%f,%f,%f,%f,%d,%f,%d,%d,%f,%f,%f,%f,%f\n",
+    //                 timer->GetValue(), envViewer->GetLuminance(), postureSensor.GetAnglerVelocity(),
+    //                 20.0,100.0,
+    //                 tail->GetPWM(),tail->GetAngle(),
+    //                 pwmLeft, pwmRight, angleLeft, angleRight,
+    //                 posSelf.x, posSelf.y, thetaSelf);
+	// 			tmp_log_cnt = 0;
+    //         }
+
+    //         if(envViewer->GetLuminance() < 50){
+    //             break;
+    //         }
+
+    //         tslp_tsk(4);
+    //     }
+    //     poseDrivingControl.SetStop(true,true,true);
+
+    //     tslp_tsk(1000); // タイヤ完全停止待機
+    // }      
+
+    // // 3. ライントレースして、シーソーにぶつける
+	// printf("PhaseSeesaw 3. Linetrace until Bumping\n");
+	// int tmp_forward = 20;
+	// timer->Reset();
+    // while (true) {
+	// 	pos->UpdateSelfPos();
+	// 	posSelf = pos->GetSelfPos();
+	// 	thetaSelf = pos->GetTheta();
+
+	// 	line.CalcTurnValue();
+	// 	turn = line.GetTurn();
+	// 	poseDrivingControl.SetParams(5.0,turn,75,false);
+	// 	poseDrivingControl.Driving();
+
+    //     tmp_log_cnt++;
+    // 	if( tmp_log_cnt > log_refleshrate ){
+    //         driveWheels->GetAngles(&angleLeft, &angleRight);
+    //         driveWheels->GetPWMs(&pwmLeft, &pwmRight);
+	// 		fprintf(file,"%f,%f,%f,%f,%f,%d,%d,%d,%f\n",
+    //        		timer->Now(), posSelf.x, posSelf.y, angleLeft, angleRight, pwmLeft, pwmRight,  tmp_forward, postureSensor.GetAnglerVelocity());
+	//         tmp_log_cnt=0;
+	// 	}
+
+    // 	//切り替え位置到達かチェック
+    // 	if(timer->Now()>5000){
+    // 		break;
+    // 	}
+
+    // 	tslp_tsk(4);
+    // }
+
+	// tslp_tsk(1000);
+
+    // // 4.1. 傾ける
+	// printf("PhaseSeesaw 4.1. Tilting\n"); 
+	// poseDrivingControl.SetParams(-5.0,0.0,75,false);
+	// timer->Reset();
+    // while (true) {
+	// 	pos->UpdateSelfPos();
+	// 	posSelf = pos->GetSelfPos();
+	// 	thetaSelf = pos->GetTheta();
+
+	// 	poseDrivingControl.Driving();
+
+    //     tmp_log_cnt++;
+    // 	if( tmp_log_cnt > log_refleshrate ){
+    //         driveWheels->GetAngles(&angleLeft, &angleRight);
+    //         driveWheels->GetPWMs(&pwmLeft, &pwmRight);
+	// 		fprintf(file,"%f,%f,%f,%f,%f,%d,%d,%d,%f\n",
+    //        		timer->Now(), posSelf.x, posSelf.y, angleLeft, angleRight, pwmLeft, pwmRight,  tmp_forward, postureSensor.GetAnglerVelocity());
+	//         tmp_log_cnt=0;
+	// 	}
+
+    // 	//切り替え位置到達かチェック
+    // 	if(timer->Now()>200){
+    // 		break;
+    // 	}
+
+    // 	tslp_tsk(4);
+    // }
+	// poseDrivingControl.SetStop(true,true,true);
+	// tslp_tsk(1000);
+
+	// tmp_stop_cnt = 0;
+	// tmp_forward = 0; //PWM = 0を出力（※gyroの更新ありに変更した）
+	// gyro_sum = 0;
+	// poseDrivingControl.SetStop(false,false,false);
+	// poseDrivingControl.SetParams(tmp_forward,0,102,false);
+    // while (true) {
+	// 	pos->UpdateSelfPos();
+	// 	posSelf = pos->GetSelfPos();
+	// 	thetaSelf = pos->GetTheta();
+
+	// 	poseDrivingControl.Driving();		
+
+    // 	if( (tmp_log_cnt++) > log_refleshrate){
+	// 		fprintf(file,"%f,%f,%f,%f,%f,%d,%d,%d,%f\n",
+    //        		timer->Now(), posSelf.x, posSelf.y, angleLeft, angleRight, pwmLeft, pwmRight,  tmp_forward, postureSensor.GetAnglerVelocity());
+	//         tmp_log_cnt=0;
+	// 	}
+    // 	gyro_sum += postureSensor.GetAnglerVelocity();
+
+    // 	//切り替え条件成立かチェック
+    //     //5ms×30回≒150msマスクする→検討した結果から決定
+	// 	if( (tmp_stop_cnt++) >= 10 && gyro_sum > 3600 ){//角速度80より大きくなったら次の処理    			
+	// 		break;
+	// 	}
+	
+    // 	tslp_tsk(4);
+    // }
 
     //※切り替え位置到達時はwhileのtslp_tsk(4)が実行されないので所定時間待つこと
 	tslp_tsk(4);
 
-    //シーソー検討
-    //foward100で乗り上げ
-	tmp_foward = 100;
-	poseDrivingControl.SetParams(tmp_foward,0,TAIL_ANGLE,true);
+    // 4.2. forward100で乗り上げ
+	printf("PhaseSeesaw 4.2.Forward to ride the Seesaw\n"); 
+	tmp_forward = 100;
+	poseDrivingControl.SetParams(tmp_forward,0,55,true);
 	while (true) {
-
-        //自己位置更新
 		pos->UpdateSelfPos();
 		posSelf = pos->GetSelfPos();
 		thetaSelf = pos->GetTheta();
 
-       	//倒立振子で前進
 		poseDrivingControl.Driving();	
 
-        //ログは10回に1回出力する
         tmp_log_cnt++;
-    	if( tmp_log_cnt > 10 ){
-			fprintf(file,"%f,%f,%f,%f,%f,%d,%d,%d,%f\n",
-           		timer->Now(), posSelf.x, posSelf.y, angleLeft, angleRight, pwmLeft, pwmRight,  tmp_foward, postureSensor.GetAnglerVelocity());
+    	if( tmp_log_cnt > log_refleshrate ){
+			driveWheels->GetAngles(&angleLeft, &angleRight);
+            driveWheels->GetPWMs(&pwmLeft, &pwmRight);
+			fprintf(file,"%f,%f,%f,%f,%d,%f,%f,%d,%d,%d,%f\n",
+           		timer->GetValue(), posSelf.x, posSelf.y, tail->GetAngle(),tail->GetPWM(),angleLeft, angleRight, pwmLeft, pwmRight,  tmp_forward, postureSensor.GetAnglerVelocity());
 	        tmp_log_cnt=0;
 		}
 
     	//乗り上げた後は、速度下げる
-    	if( IsStartSlowFoward( posSelf.x ) == true ){
-    		//所定位置まで到達した
-    		break;
-    	}
-    	else{
-    		//所定位置到達待ち
+    	// if( IsStartSlowForward( posSelf.x ) == true ){
+		if(posSelf.DistanceFrom(startPos)>26.0+15.0){
+    		break; //所定位置まで到達した
     	}
 
     	tslp_tsk(4);
@@ -170,32 +399,31 @@ void PhaseSeesaw::Execute(){
     //※切り替え位置到達時はwhileのtslp_tsk(4)が実行されないので所定時間待つこと
 	tslp_tsk(4);
 
-    //乗り上げ後は、foward40でゆっくり進む
-	tmp_foward = 40;
-	poseDrivingControl.SetParams(tmp_foward,0,TAIL_ANGLE,true);
+    // 5. 乗り上げ後は、forward40でゆっくり進む
+	printf("PhaseSeesaw 5.Climbing\n"); 
+	tmp_forward = 40;
 	while (true) {
-
-        //自己位置更新
 		pos->UpdateSelfPos();
 		posSelf = pos->GetSelfPos();
 		thetaSelf = pos->GetTheta();
-		
-       	//倒立振子で前進
+
+		line.CalcTurnValue();
+		turn = line.GetTurn()*0.2;
+		poseDrivingControl.SetParams(tmp_forward,turn,55,true);
 		poseDrivingControl.Driving();		
 
-        //ログは10回に1回出力する
-        tmp_log_cnt++;
-    	if( tmp_log_cnt > 10 ){
-			fprintf(file,"%f,%f,%f,%f,%f,%d,%d,%d,%f\n",
-           		timer->Now(), posSelf.x, posSelf.y, angleLeft, angleRight, pwmLeft, pwmRight,  tmp_foward, postureSensor.GetAnglerVelocity());
+    	if( (tmp_log_cnt++) > log_refleshrate ){
+			driveWheels->GetAngles(&angleLeft, &angleRight);
+            driveWheels->GetPWMs(&pwmLeft, &pwmRight);
+			fprintf(file,"%f,%f,%f,%f,%d,%f,%f,%d,%d,%d,%f\n",
+           		timer->GetValue(), posSelf.x, posSelf.y, tail->GetAngle(),tail->GetPWM(),angleLeft, angleRight, pwmLeft, pwmRight,  tmp_forward, postureSensor.GetAnglerVelocity());
 	        tmp_log_cnt=0;
 		}
 
     	//back待ち
-        if( IsStartBackFoward( posSelf.x ) == true ){
+		if(posSelf.DistanceFrom(startPos)>26.0+50.0){
+        // if( IsStartBackForward( posSelf.x ) == true ){
     		break;
-    	}
-        else{
     	}
 
     	tslp_tsk(4);
@@ -203,9 +431,10 @@ void PhaseSeesaw::Execute(){
     //※切り替え位置到達時はwhileのtslp_tsk(4)が実行されないので所定時間待つこと
 	tslp_tsk(4);
 
-    //シーソー下り開始に合わせて、foward=-40でシーソー上で停止 or バックさせる
-	tmp_foward = -40;
-	poseDrivingControl.SetParams(tmp_foward,0,TAIL_ANGLE,true);
+    // 6. シーソー下り開始に合わせて、forward=-40でシーソー上で停止 or バックさせる
+	printf("PhaseSeesaw 6.Back when descending seesaw\n"); 
+	tmp_forward = 60.0;
+	poseDrivingControl.SetParams(tmp_forward, 0, 55, false);
 	while (true) {
 
         //自己位置更新
@@ -217,27 +446,32 @@ void PhaseSeesaw::Execute(){
 
         tmp_log_cnt++;
     	if( tmp_log_cnt > 10 ){
-			fprintf(file,"%f,%f,%f,%f,%f,%d,%d,%d,%f\n",
-           		timer->Now(), posSelf.x, posSelf.y, angleLeft, angleRight, pwmLeft, pwmRight,  tmp_foward, postureSensor.GetAnglerVelocity());
+			driveWheels->GetAngles(&angleLeft, &angleRight);
+            driveWheels->GetPWMs(&pwmLeft, &pwmRight);
+			fprintf(file,"%f,%f,%f,%f,%d,%f,%f,%d,%d,%d,%f\n",
+           		timer->GetValue(), posSelf.x, posSelf.y, tail->GetAngle(),tail->GetPWM(),angleLeft, angleRight, pwmLeft, pwmRight,  tmp_forward, postureSensor.GetAnglerVelocity());
 	        tmp_log_cnt=0;
 		}
 
     	//back待ち
-        if( IsStartStopFoward( posSelf.x ) == true ){
+		if(posSelf.DistanceFrom(startPos)>26.0+60.0){
+        // if( IsStartStopForward( posSelf.x ) == true ){
     		break;
-    	}
-        else{
     	}
 
     	tslp_tsk(4);
     }
     //※切り替え位置到達時はwhileのtslp_tsk(4)が実行されないので所定時間待つこと
 	tslp_tsk(4);
+	poseDrivingControl.SetStop(true,true,true);
 
+	tslp_tsk(1000);
+	// poseDrivingControl.SetStop(false,true,true);
 
-	//シーソーから降りて前進する foward 70
-	tmp_foward = 70;
-	poseDrivingControl.SetParams(tmp_foward,0,TAIL_ANGLE,true);
+	// 7. シーソーから降りて前進する forward 70
+	printf("PhaseSeesaw 7.Forward to get off\n"); 
+	tmp_forward = 40;
+	poseDrivingControl.SetParams(tmp_forward,0,60,false);
 	while (true) {
 		pos->UpdateSelfPos();
 		posSelf = pos->GetSelfPos();
@@ -245,76 +479,80 @@ void PhaseSeesaw::Execute(){
 		
 		poseDrivingControl.Driving();	
 
-		tmp_log_cnt++;
-		if( tmp_log_cnt > 10 ){
-			fprintf(file,"%f,%f,%f,%f,%f,%d,%d,%d,%f\n",
-           		timer->Now(), posSelf.x, posSelf.y, angleLeft, angleRight, pwmLeft, pwmRight,  tmp_foward, postureSensor.GetAnglerVelocity());
+    	if( (tmp_log_cnt++) > log_refleshrate ){
+            driveWheels->GetAngles(&angleLeft, &angleRight);
+            driveWheels->GetPWMs(&pwmLeft, &pwmRight);
+			fprintf(file,"%f,%f,%f,%f,%d,%f,%f,%d,%d,%d,%f\n",
+           		timer->GetValue(), posSelf.x, posSelf.y, tail->GetAngle(),tail->GetPWM(),angleLeft, angleRight, pwmLeft, pwmRight,  tmp_forward, postureSensor.GetAnglerVelocity());
 	        tmp_log_cnt=0;
 		}
 
     	//back待ち
-        if( IsEndStopFoward( posSelf.x ) == true ){
+		if(posSelf.DistanceFrom(startPos)>26.0+95.0){
+        // if( IsEndStopForward( posSelf.x ) == true ){
     		break;
-    	}
-        else{
     	}
 
 		tslp_tsk(4);
 	}
+	poseDrivingControl.SetStop(true,true,true);
+	// シーソー上で停止
 
-	// 着地
-    int tau = 1000;	
-    timer->Reset();
-	poseDrivingControl.SetParams(-50.0,0,65,true);
-    while (true) {
-		pos->UpdateSelfPos();
-		posSelf = pos->GetSelfPos();
-		thetaSelf = pos->GetTheta();
+	tslp_tsk(1000);
+	poseDrivingControl.SetStop(false,true,true);
 
-		poseDrivingControl.Driving();
-
-		tmp_log_cnt++;
-		if( tmp_log_cnt > 10 ){
-			fprintf(file,"%f,%f,%f,%f,%f,%d,%d,%d,%f\n",
-           		timer->Now(), posSelf.x, posSelf.y, angleLeft, angleRight, pwmLeft, pwmRight,  tmp_foward, postureSensor.GetAnglerVelocity());
-	        tmp_log_cnt=0;
-		}
-
-        if (timer->Now()>tau) {
-			poseDrivingControl.SetParams(0,0,65,false);
-			poseDrivingControl.Driving();
-            poseDrivingControl.SetStop(true,false,false);
-            break;
-        }   
-        
-        tslp_tsk(4);
-    }
-
-	poseDrivingControl.SetParams(0,0,70,true);
+	// 8. 着地
+	printf("PhaseSeesaw 8.Landing and Stop\n"); 
     while(true){
-		pos->UpdateSelfPos();
-		posSelf = pos->GetSelfPos();
-		thetaSelf = pos->GetTheta();
-
-		poseDrivingControl.Driving();
-
-		tmp_log_cnt++;
-		if( tmp_log_cnt > 10 ){
-			fprintf(file,"%f,%f,%f,%f,%f,%d,%d,%d,%f\n",
-           		timer->Now(), posSelf.x, posSelf.y, angleLeft, angleRight, pwmLeft, pwmRight,  tmp_foward, postureSensor.GetAnglerVelocity());
-	        tmp_log_cnt=0;
-		}
-
-        if (abs(tail->GetAngle() - 70) < 5) {
-			poseDrivingControl.SetParams(30,0,65,false);
-			poseDrivingControl.Driving();
-            tslp_tsk(800);
-            poseDrivingControl.SetStop(true,true,true);
+        if (abs(tail->GetAngle() - 70) < 3) {
             break;
         }
-         
+        poseDrivingControl.SetParams(-10,0,70,false);
+        poseDrivingControl.Driving();
+
+        pos->UpdateSelfPos();
+        posSelf = pos->GetSelfPos();
+        thetaSelf = pos->GetTheta();
+
+    	if( (tmp_log_cnt++) > log_refleshrate ){
+            driveWheels->GetAngles(&angleLeft, &angleRight);
+            driveWheels->GetPWMs(&pwmLeft, &pwmRight);
+			fprintf(file,"%f,%f,%f,%f,%d,%f,%f,%d,%d,%d,%f\n",
+           		timer->GetValue(), posSelf.x, posSelf.y, tail->GetAngle(),tail->GetPWM(),angleLeft, angleRight, pwmLeft, pwmRight,  tmp_forward, postureSensor.GetAnglerVelocity());
+	        tmp_log_cnt=0;
+		}
         tslp_tsk(4);
     }
+    poseDrivingControl.SetStop(true,true,true);
+	poseDrivingControl.SetParams(10,0,70,false);
+	poseDrivingControl.Driving();
+	tslp_tsk(500);
+    poseDrivingControl.SetStop(true,true,true);
+    // tslp_tsk(1000); // タイヤ完全停止待機
+
+    // poseDrivingControl.SetStop(false,false,false);
+    // while(true){
+    //     if (abs(tail->GetAngle() - 80) < 3) {
+    //         break;
+    //     }
+    //     poseDrivingControl.SetParams(0,0,80,false);
+    //     poseDrivingControl.Driving();
+
+    //     pos->UpdateSelfPos();
+    //     posSelf = pos->GetSelfPos();
+    //     thetaSelf = pos->GetTheta();
+
+    // 	if( (tmp_log_cnt++) > log_refleshrate ){
+    //         driveWheels->GetAngles(&angleLeft, &angleRight);
+    //         driveWheels->GetPWMs(&pwmLeft, &pwmRight);
+	// 		fprintf(file,"%f,%f,%f,%f,%d,%f,%f,%d,%d,%d,%f\n",
+    //        		timer->GetValue(), posSelf.x, posSelf.y, tail->GetAngle(),tail->GetPWM(),angleLeft, angleRight, pwmLeft, pwmRight,  tmp_forward, postureSensor.GetAnglerVelocity());
+	//         tmp_log_cnt=0;
+	// 	}
+    //     tslp_tsk(4);
+    // }
+    // poseDrivingControl.SetStop(true,true,true);
+    
 
 	finFlg = true;
 	printf("PhaseSeesaw Execute done\n");
@@ -331,7 +569,7 @@ void PhaseSeesaw::Execute(){
 #define SEESAW_END_STOP ( SEESAW_ENTER_X + 60 )
 
 //以下のパラメータで座標切り替え判断する
-bool PhaseSeesaw::IsStartFoward( float _x ){
+bool PhaseSeesaw::IsStartForward( float _x ){
 	bool ret = false;
 	if( _x > SEESAW_PRE_ENTER_X ){
 		ret = true;
@@ -347,7 +585,7 @@ bool PhaseSeesaw::IsStartEnter( float _x ){
 	return ret;
 }
 
-bool PhaseSeesaw::IsStartSlowFoward( float _x ){
+bool PhaseSeesaw::IsStartSlowForward( float _x ){
 	bool ret = false;
 	if( _x > SEESAW_SLOW ){
 		ret = true;
@@ -355,7 +593,7 @@ bool PhaseSeesaw::IsStartSlowFoward( float _x ){
 	return ret;
 }
 
-bool PhaseSeesaw::IsStartBackFoward( float _x ){
+bool PhaseSeesaw::IsStartBackForward( float _x ){
 	bool ret = false;
 	if( _x > SEESAW_BACK ){
 		ret = true;
@@ -363,7 +601,7 @@ bool PhaseSeesaw::IsStartBackFoward( float _x ){
 	return ret;
 }
 
-bool PhaseSeesaw::IsStartStopFoward( float _x ){
+bool PhaseSeesaw::IsStartStopForward( float _x ){
 	bool ret = false;
 	if( _x > SEESAW_STOP ){
 		ret = true;
@@ -372,7 +610,7 @@ bool PhaseSeesaw::IsStartStopFoward( float _x ){
 }
 
 
-bool PhaseSeesaw::IsEndStopFoward( float _x ){
+bool PhaseSeesaw::IsEndStopForward( float _x ){
 	bool ret = false;
 	if( _x > SEESAW_END_STOP ){
 		ret = true;
