@@ -23,7 +23,7 @@ void PhaseInitialization::Calibration(){
 	initEnvironmentSensor.Initialize();
 
 	printf("PhaseInitialization initVehicleHardware Calibration\n");
-	initVehicleHardware.Calibration();
+	// initVehicleHardware.Calibration();
 	printf("PhaseInitialization initEnvironmentSensor Calibration\n");
 	initEnvironmentSensor.Calibration();
 }
