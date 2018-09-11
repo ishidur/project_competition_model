@@ -34,7 +34,6 @@ void TumbleStop::TumbleStopTask(){
 
             ter_tsk(PHASE_TASK);
             wup_tsk(MAIN_TASK);
-            ev3_stp_cyc(TUMBLE_CYC);
         }
     }
 }
