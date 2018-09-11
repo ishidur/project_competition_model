@@ -6,7 +6,7 @@ using namespace AppliedHardware::Communication;
 
 Communication* Communication::singletonInstance = nullptr;
 
-Communication::Communication() : taskStop(false){
+Communication::Communication() : taskStop(false), count(0){
     memset(this->receivedBuffer, '\0', 255);
 }
 
@@ -32,11 +32,12 @@ void Communication::Connect(){
 }
 
 void Communication::ReceiveTask(){
-    static int count = 0;
-    uint8_t c = protocol->GetChar();
-    this->receivedBuffer[count] = c;
-    count = (count+1)%255;
-	protocol->SendChar(c);
+    if(!taskStop){
+        uint8_t c = protocol->GetChar();
+        this->receivedBuffer[count] = c;
+        count = (count+1)%255;
+        protocol->SendChar(c);
+    }
 }
 
 void Communication::GetReceiveMessage(unsigned char* message){
@@ -44,6 +45,7 @@ void Communication::GetReceiveMessage(unsigned char* message){
     unsigned char* cp = &(this->receivedBuffer[0]);
     while (*cp != '\0') *message++ = *cp++;
     memset(this->receivedBuffer, '\0', 255);
+    count = 0;
     taskStop = false;    
 }
 

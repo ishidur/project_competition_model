@@ -13,13 +13,16 @@ PhaseReady::PhaseReady(){
 }
 
 void PhaseReady::Execute(){
+	printf("PhaseReady Execute\n");
 	PoseDrivingControl poseDrivingControl;
 	com->SetProtocol(new Bluetooth());
 	com->Connect();
 
-	poseDrivingControl.SetStop(true, true, true);
+	poseDrivingControl.SetStop(false, true, true);
 
+    tailControl.SetTargetAngle(85);
     while (true) {
+        tailControl.RotateTowardTarget();
         if (IsGetStartCommand()) {
             break;
         }
@@ -29,6 +32,7 @@ void PhaseReady::Execute(){
     com->Disconnect();
 
 	finFlg = true;
+	printf("PhaseReady Execute Done\n");
 }
 
 bool PhaseReady::IsGetStartCommand(){

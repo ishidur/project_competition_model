@@ -14,6 +14,7 @@ namespace AppliedHardware{
 				unsigned char receivedBuffer[255];
 
 				bool taskStop;
+				int count;
 
 			public:
 				Communication();
