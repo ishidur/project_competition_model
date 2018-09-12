@@ -8,6 +8,7 @@ namespace Phase{
 	class PhaseGarage : public PhaseBase{
         private:
             Positioning::Localization::SelfPos* pos;
+            FILE* file;
 		public:
 			PhaseGarage();
 			void Execute() override;

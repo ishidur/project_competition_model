@@ -108,7 +108,7 @@ void PhaseNavigation::Execute(){
         	//所定回数≒所定時間経過待ち
     	}else{
     		//所定回数≒所定時間経過した
-        	if( tmp_high_speed_gyro_sum > 900 ){
+        	if( tmp_high_speed_gyro_sum > 1300 ){
     			//角速度80より大きくなったら次の処理
     			break;
     		}
@@ -119,7 +119,7 @@ void PhaseNavigation::Execute(){
 
 	// 2. 初期安定化前進
 	printf("PhaseNavigation 2.BalanceForward\n");
-	poseDrivingControl.SetParams(100.0,0,45,true);
+	poseDrivingControl.SetParams(40.0,0,45,true);
 	driveWheels->GetAngles(&angleLeft, &angleRight);
     while (true){
 		poseDrivingControl.Driving();
@@ -133,14 +133,14 @@ void PhaseNavigation::Execute(){
 				driveWheels->GetPWMs(&pwmLeft, &pwmRight);
 				fprintf(file,"%f,%f,%f,%f,%f,%f,%d,%f,%d,%d,%f,%f,%f,%f,%f\n",
 					cl->GetValue(), envViewer->GetLuminance(), postureSensor.GetAnglerVelocity(),envViewer->GetUSDistance(),
-					45.0,0.0,
+					40.0,0.0,
 					tail->GetPWM(),tail->GetAngle(),
 					pwmLeft, pwmRight, angleLeft, angleRight,
 					posSelf.x, posSelf.y, thetaSelf);
 		}     
 
 		driveWheels->GetAngles(&angleLeft, &angleRight);
-		if(angleRight >= 50.0){
+		if(angleRight >= 150.0){
 			break;
 		}	
 
@@ -153,7 +153,7 @@ void PhaseNavigation::Execute(){
     while (true) {        
 		line.CalcTurnValue();
 		turn = line.GetTurn();
-		poseDrivingControl.SetParams(90.0,turn,45,true);
+		poseDrivingControl.SetParams(70.0,turn,45,true);
 		poseDrivingControl.Driving();
 
 		pos->UpdateSelfPos();
@@ -165,7 +165,7 @@ void PhaseNavigation::Execute(){
 				driveWheels->GetPWMs(&pwmLeft, &pwmRight);
 				fprintf(file,"%f,%f,%f,%f,%f,%f,%d,%f,%d,%d,%f,%f,%f,%f,%f\n",
 					cl->GetValue(), envViewer->GetLuminance(), postureSensor.GetAnglerVelocity(),envViewer->GetUSDistance(),
-					95.0,turn,
+					70.0,turn,
 					tail->GetPWM(),tail->GetAngle(),
 					pwmLeft, pwmRight, angleLeft, angleRight,
 					posSelf.x, posSelf.y, thetaSelf);

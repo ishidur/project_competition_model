@@ -38,19 +38,10 @@ void PhaseGarage::Execute(){
 
     LineLuminance line;
 
-    FILE* file;
-    for (int i = 0; ; i++) {
-        char filename[255] = {};
-        sprintf(filename, "/ev3rt/res/log_data_endstop_%03d.csv", i);
-        file = fopen(filename, "r");    // ファイルが無いときNULL
-        if (file == NULL) {
-            fclose(file);
-            // ファイルを作成する
-            file = fopen(filename, "w");
-            break;
-        }
-        fclose(file);
-    }
+
+    char filename[255] = {};
+    sprintf(filename, "/ev3rt/res/log_data_endstopcsv.csv");
+    file = fopen(filename, "w");
     fprintf(file,"t,gyroSensor,angleLeft,angleRight,pwmLeft,pwmRight,posSelf.x,posSelf.y,thetaSelf,r,g,b\n");
 
     int frameCount = 0;
@@ -107,7 +98,7 @@ void PhaseGarage::Execute(){
         if (abs(tail->GetAngle() - 70) < 3) {
             break;
         }
-        poseDrivingControl.SetParams(-10,0,75,false);
+        poseDrivingControl.SetParams(-10,0,70,false);
         poseDrivingControl.Driving();
 
         pos->UpdateSelfPos();
