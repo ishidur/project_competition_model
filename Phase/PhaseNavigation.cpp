@@ -139,12 +139,18 @@ void PhaseNavigation::Execute(){
 
 		tslp_tsk(4);
     }
-#if 0
+
 	// 3. 輝度ライントレース
 	printf("PhaseNavigation 3.Linetrace\n");
 	LineLuminance line;
 	ExponentialSmoothingFilter expFilter(0.5,150.0);
+    int fileterSize = 100;
+    int cnt = 0;
 	float forward;
+    float caribratedBrightnesses[fileterSize]={0.0};
+    float greyBottom = 45.0;
+    float greyTop = 55.0;
+    float varianceCriteria = 5.0;
     while (true) {        
 		line.CalcTurnValue();
 		turn = line.GetTurn();
@@ -157,25 +163,41 @@ void PhaseNavigation::Execute(){
 		posSelf = pos->GetSelfPos();
 		thetaSelf = pos->GetTheta();
 
+        if (cnt == fileterSize) {
+          cnt = 0;
+        }
+        caribratedBrightnesses[cnt] = envViewer->GetLuminance();
+        cnt++;
+        float sum=0.0;
+        float squaredSum=0.0;
+        for (int i = 0; i < fileterSize;i++) {
+          sum += caribratedBrightnesses[i];
+          squaredSum += caribratedBrightnesses[i]* caribratedBrightnesses[i];
+        }
+        float variance =( squaredSum * fileterSize - sum * sum)/(fileterSize*(fileterSize-1));
 		if ((frameCount++) % log_refleshrate == 0) {
 				driveWheels->GetAngles(&angleLeft, &angleRight);
 				driveWheels->GetPWMs(&pwmLeft, &pwmRight);
-				fprintf(file,"%f,%f,%f,%f,%f,%f,%d,%f,%d,%d,%f,%f,%f,%f,%f\n",
+				fprintf(file,"%f,%f,%f,%f,%f,%f,%d,%f,%d,%d,%f,%f,%f,%f,%f,%f\n",
 					cl->GetValue(), envViewer->GetLuminance(), postureSensor.GetAnglerVelocity(),envViewer->GetUSDistance(),
 					forward,turn,
 					tail->GetPWM(),tail->GetAngle(),
 					pwmLeft, pwmRight, angleLeft, angleRight,
-					posSelf.x, posSelf.y, thetaSelf);
+					posSelf.x, posSelf.y, thetaSelf,variance);
 		}     
-
-        if (IsFinish(posSelf)) {
+        if (variance<varianceCriteria&&greyBottom<envViewer->GetLuminance()&&envViewer->GetLuminance()<greyTop)
+        {
+            ev3_speaker_play_tone(NOTE_C4, 10);
             break;
         }
+        // if (IsFinish(posSelf)) {
+        //     break;
+        // }
 
         frameCount++;  
         tslp_tsk(4);
     }
-#endif
+
 	finFlg = true;
 	printf("PhaseNavigation Execute done\n");
 }
@@ -186,7 +208,8 @@ bool PhaseNavigation::IsFinish(Vector2D posSelf) {
         // return (posSelf.x < 170.0 && posSelf.y < 180.0);    
     }else if(this->course=='L'){//L(LookUpGate)
 		// return (posSelf.x < 137.0 && posSelf.y > 335.0);
-		return (posSelf.x < 0.0 && posSelf.y > 80.0);
+        return (envViewer->GetTouch()||envViewer->GetUSDistance()<15);
+		// return (posSelf.x < 0.0 && posSelf.y > 80.0);
     }
     return (envViewer->GetTouch()||envViewer->GetUSDistance()<15);
 }
