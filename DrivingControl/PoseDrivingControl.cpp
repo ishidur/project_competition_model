@@ -2,7 +2,7 @@
 
 using namespace DrivingControl;
 
-PoseDrivingControl::PoseDrivingControl(): 
+PoseDrivingControl::PoseDrivingControl():
     power(0), turn(0), poseAngle(0), isBalancing(false),
     isStopTail(false), isStopLeft(false), isStopRight(false){
 
@@ -21,8 +21,10 @@ void PoseDrivingControl::SetParams(float power, float turn, int poseAngle, bool 
     this->turn = turn;
     turnDrivingControl.SetTurn(turn);
 
-    this->poseAngle = poseAngle;
-    tailControl.SetTargetAngle(poseAngle);
+    if( this->poseAngle != poseAngle ){
+		this->poseAngle = poseAngle;
+		tailControl.SetTargetAngle(poseAngle);
+    }
 
     this->isBalancing = isBalancing;
 }

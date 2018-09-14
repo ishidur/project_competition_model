@@ -2,20 +2,14 @@
 #include <stdio.h>
 #include <string.h>
 
-#define SELF_POS_X_INIT 499.14	//Lコース(検討用初期位置x）
-#define SELF_POS_Y_INIT 339.51	//Lコース(検討用初期位置y）
-#define SELF_POS_THETA_INIT 3.141592	//Lコース(検討用初期角度）
-#define SELF_VEL_X_INIT -1		//Lコース(検討用初期速度x）
-#define SELF_VEL_Y_INIT 0		//Lコース(検討用初期速度y）
-
 using namespace Positioning::Localization;
 using namespace Utilities;
 
 SelfPos* SelfPos::singletonInstance = nullptr;
 
-SelfPos::SelfPos():vSelf(SELF_POS_X_INIT,SELF_POS_Y_INIT),thetaSelf(SELF_POS_THETA_INIT),vSelfVel(SELF_VEL_X_INIT,SELF_VEL_Y_INIT){
+SelfPos::SelfPos():vSelf(0,0),thetaSelf(0),vSelfVel(0,0){
 	Odmetry = new CalcSelfPosWithOdmetry();
-	ReadFirstPos("/ev3rt/res/course/course.txt", "/ev3rt/res/course/pos_param.txt");
+	ReadFirstPos("/ev3rt/res/course/course.txt", "/ev3rt/res/course/pos_param_seesaw.txt");
 }
 
 SelfPos* SelfPos::GetInstance(){

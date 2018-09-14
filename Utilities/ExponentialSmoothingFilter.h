@@ -12,6 +12,7 @@ namespace Utilities{
 
 		public:
 			ExponentialSmoothingFilter(float AParam);
+			ExponentialSmoothingFilter(float AParam, float valueBefore);
 			ExponentialSmoothingFilter(const char* filename);
 			float GetValue(float input) override;
 

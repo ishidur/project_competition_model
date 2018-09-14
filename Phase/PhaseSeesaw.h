@@ -2,6 +2,7 @@
 #define PHASE_PHASE_SEESAW_H
 
 #include "PhaseBase.h"
+#include <stdio.h>
 
 #include "../BaseHardware/Timer.h"
 #include "../DrivingControl/PoseDrivingControl.h"
@@ -28,6 +29,8 @@ namespace Phase{
 
 			int tmp_log_cnt;
 			int tmp_stop_cnt;
+			
+			FILE* file;
 
 		public:
 			PhaseSeesaw();
