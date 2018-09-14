@@ -47,6 +47,10 @@ PhaseSeesaw::PhaseSeesaw(){
 	fprintf(file,"timer,x,y,theta,tailAngle,tailPWM,angleLeft,angleRight,pwmLeft,pwmRight,forward,gyro\n");
 }
 
+// 大きく加速
+// 尻尾下ろし
+// ゆっくり前進
+
 void PhaseSeesaw::Execute(){
 	printf("PhaseSeesaw Execute\n");
 	

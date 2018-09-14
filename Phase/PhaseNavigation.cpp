@@ -139,7 +139,6 @@ void PhaseNavigation::Execute(){
 
 		tslp_tsk(4);
     }
-
 #if 0
 	// 3. 輝度ライントレース
 	printf("PhaseNavigation 3.Linetrace\n");
@@ -177,7 +176,6 @@ void PhaseNavigation::Execute(){
         tslp_tsk(4);
     }
 #endif
-
 	finFlg = true;
 	printf("PhaseNavigation Execute done\n");
 }
