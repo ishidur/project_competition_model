@@ -65,7 +65,7 @@ void PhaseGarage::Execute(){
     poseDrivingControl.SetStop(false,false,false);
 
     // ガレージに入るとこまで
-    while(posSelf.DistanceFrom(startPos)<60){
+    while(posSelf.DistanceFrom(startPos)<56){
         line.CalcTurnValueByRGB();//CalcTurnValue();
         turn = -1.0*line.GetTurn();
         poseDrivingControl.SetParams(20,turn,63,false);

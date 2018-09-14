@@ -200,7 +200,7 @@ bool PhaseNavigation::IsFinish(Vector2D posSelf) {
 		return (envViewer->GetTouch()||envViewer->GetUSDistance()<15);
     }else if(this->course=='L'){//L(LookUpGate)
 		// return (posSelf.x < 137 && posSelf.y > 335.0) || (envViewer->GetTouch()||envViewer->GetUSDistance()<15);
-		return (posSelf.x < 0.0 && posSelf.y > 75.0);
+		return (posSelf.x < 0.0 && posSelf.y > 80.0);
     }
     return (envViewer->GetTouch()||envViewer->GetUSDistance()<15);
 }
