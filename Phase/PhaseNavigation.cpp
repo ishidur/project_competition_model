@@ -168,12 +168,23 @@ void PhaseNavigation::Execute(){
 	printf("PhaseNavigation 3.Linetrace\n");
 	LineLuminance line;
 	ExponentialSmoothingFilter expFilter(0.5,150.0);
+<<<<<<< HEAD
 	float tmp_forward = 100;
 	while(1){
 		pos->UpdateSelfPos();
 		posSelf = pos->GetSelfPos();
 		thetaSelf = pos->GetTheta();
 
+=======
+    int fileterSize = 100;
+    int cnt = 0;
+	float forward;
+    float caribratedBrightnesses[fileterSize]={0.0};
+    float greyBottom = 45.0;
+    float greyTop = 55.0;
+    float varianceCriteria = 5.0;
+    while (true) {        
+>>>>>>> 分散値による
 		line.CalcTurnValue();
 		turn = line.GetTurn();
 		poseDrivingControl.SetParams(tmp_forward,turn,TAIL_ANGLE,true);
@@ -285,6 +296,44 @@ void PhaseNavigation::Execute(){
 //         tslp_tsk(4);
 //     }
 
+<<<<<<< HEAD
+=======
+        if (cnt == fileterSize) {
+          cnt = 0;
+        }
+        caribratedBrightnesses[cnt] = envViewer->GetLuminance();
+        cnt++;
+        float sum=0.0;
+        float squaredSum=0.0;
+        for (int i = 0; i < fileterSize;i++) {
+          sum += caribratedBrightnesses[i];
+          squaredSum += caribratedBrightnesses[i]* caribratedBrightnesses[i];
+        }
+        float variance =( squaredSum * fileterSize - sum * sum)/(fileterSize*(fileterSize-1));
+		if ((frameCount++) % log_refleshrate == 0) {
+				driveWheels->GetAngles(&angleLeft, &angleRight);
+				driveWheels->GetPWMs(&pwmLeft, &pwmRight);
+				fprintf(file,"%f,%f,%f,%f,%f,%f,%d,%f,%d,%d,%f,%f,%f,%f,%f,%f\n",
+					cl->GetValue(), envViewer->GetLuminance(), postureSensor.GetAnglerVelocity(),envViewer->GetUSDistance(),
+					forward,turn,
+					tail->GetPWM(),tail->GetAngle(),
+					pwmLeft, pwmRight, angleLeft, angleRight,
+					posSelf.x, posSelf.y, thetaSelf,variance);
+		}     
+        if (variance<varianceCriteria&&greyBottom<envViewer->GetLuminance()&&envViewer->GetLuminance()<greyTop)
+        {
+            ev3_speaker_play_tone(NOTE_C4, 10);
+            break;
+        }
+        // if (IsFinish(posSelf)) {
+        //     break;
+        // }
+
+        frameCount++;  
+        tslp_tsk(4);
+    }
+
+>>>>>>> 分散値による
 	finFlg = true;
 	printf("PhaseNavigation Execute done\n");
 }
@@ -296,8 +345,13 @@ bool PhaseNavigation::IsFinish(Vector2D posSelf) {
 		return ( navigation->IsFinish() == true );
     }else if(this->course=='L'){//L(LookUpGate)
 		// return (posSelf.x < 137.0 && posSelf.y > 335.0);
+<<<<<<< HEAD
 		return ( navigation->IsFinish() == true );
 //		return (posSelf.x < 0.0 && posSelf.y > 80.0);
+=======
+        return (envViewer->GetTouch()||envViewer->GetUSDistance()<15);
+		// return (posSelf.x < 0.0 && posSelf.y > 80.0);
+>>>>>>> 分散値による
     }
     return (envViewer->GetTouch()||envViewer->GetUSDistance()<15);
 }
