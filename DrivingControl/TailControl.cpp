@@ -11,6 +11,7 @@ TailControl::TailControl(){
 
 void TailControl::SetTargetAngle(int targetAngle){
     this->targetAngle = targetAngle;
+    pidCalc->PIDReStart();//ターゲットを更新するので再スタート
 }
 
 void TailControl::RotateTowardTarget(){
