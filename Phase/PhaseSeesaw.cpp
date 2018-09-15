@@ -82,10 +82,15 @@ void PhaseSeesaw::Execute(){
 		posSelf = pos->GetSelfPos();
 		thetaSelf = pos->GetTheta();
 
-		tmp_forward = 70;
-		line.CalcTurnValue();
-		turn = line.GetTurn();
-		poseDrivingControl.SetParams(tmp_forward,turn,TAIL_ANGLE,true);
+    	// if(posSelf.DistanceFrom(startPos)>SEESAW_PRE_ENTER_X){ // 倒立振子で前進
+		// 	tmp_forward = expFilter.GetValue(100.0);
+		// 	poseDrivingControl.SetParams(tmp_forward,0,TAIL_ANGLE,true);
+    	// }else{ // まずはライントレース
+			tmp_forward = 70;
+			line.CalcTurnValue();
+			turn = line.GetTurn();
+			poseDrivingControl.SetParams(tmp_forward,turn,TAIL_ANGLE,true);
+    	// }
 		poseDrivingControl.Driving();
 
 		driveWheels->GetAngles(&angleLeft, &angleRight);
@@ -109,6 +114,7 @@ void PhaseSeesaw::Execute(){
     }
 	tslp_tsk(4);
 
+#if 1
     // 2. 傾く
 	printf("PhaseSeesaw 2. Tilting\n"); 
 	tmp_stop_cnt = 0;
@@ -327,7 +333,7 @@ void PhaseSeesaw::Execute(){
     	if( tmp_log_cnt > 10 ){
 			driveWheels->GetAngles(&angleLeft, &angleRight);
             driveWheels->GetPWMs(&pwmLeft, &pwmRight);
-			fprintf(file,"%f,%f,%f,%f,%f,%d,%f,%f,%d,%d,%d,%f\n",
+			fprintf(file,"2,%f,%f,%f,%f,%f,%d,%f,%f,%d,%d,%d,%f\n",
            		timer->GetValue(), posSelf.x, posSelf.y, thetaSelf, tail->GetAngle(),tail->GetPWM(),angleLeft, angleRight, pwmLeft, pwmRight,  tmp_forward, postureSensor.GetAnglerVelocity());
 	        tmp_log_cnt=0;
 		}
@@ -588,6 +594,7 @@ void PhaseSeesaw::Execute(){
     	tslp_tsk(4);
     }
 	tslp_tsk(4);
+#endif
 
 #if 0
 	// 1. 尻尾で着地

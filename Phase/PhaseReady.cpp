@@ -22,9 +22,10 @@ void PhaseReady::Execute(){
 	poseDrivingControl.SetStop(false, true, true);
 
     tailControl.SetTargetAngle(85);
+    int count = 0;
     while (true) {
         tailControl.RotateTowardTarget();
-        if (IsGetStartCommand()) {
+        if ((count++)%20==0&&IsGetStartCommand()) {
             break;
         }
         
