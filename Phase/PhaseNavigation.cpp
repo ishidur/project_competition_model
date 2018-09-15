@@ -139,8 +139,6 @@ void PhaseNavigation::Execute(){
 	driveWheels->GetAngles(&angleLeft, &angleRight);
 
     while (true){
-		poseDrivingControl.Driving();
-
 		pos->UpdateSelfPos();
 		posSelf = pos->GetSelfPos();
 		thetaSelf = pos->GetTheta();

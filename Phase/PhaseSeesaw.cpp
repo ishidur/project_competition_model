@@ -594,7 +594,6 @@ void PhaseSeesaw::Execute(){
     	tslp_tsk(4);
     }
 	tslp_tsk(4);
-#endif
 
 #if 0
 	// 1. 尻尾で着地
