@@ -1,6 +1,5 @@
 #include "PhaseReady.h"
 #include <string.h>
-
 #include "../BaseHardware/Bluetooth.h"
 
 using namespace Phase;

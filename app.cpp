@@ -107,5 +107,5 @@ void initialize(){
     ev3_gyro_sensor_reset(gyro_sensor);
     balance_init();
 
-    // ev3_sta_cyc(TUMBLE_CYC);
+    ev3_sta_cyc(TUMBLE_CYC);
 }

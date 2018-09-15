@@ -100,7 +100,7 @@ void PhaseNavigation::Execute(){
     	//切り替え条件成立かチェック
         //5ms×10回≒50msマスクする→検討した結果から決定
         if( (tmp_high_speed_start_cnt++)>10 ){
-        	if( tmp_high_speed_gyro_sum > 1500 || (tmp_high_speed_gyro_sum > 800 && now_gyro > 80)){
+        	if( tmp_high_speed_gyro_sum > 1500 || (tmp_high_speed_gyro_sum > 1100 && now_gyro > 80)){
     			//角速度80より大きくなったら次の処理
     			break;
     		}
@@ -112,28 +112,31 @@ void PhaseNavigation::Execute(){
 	// 2. 初期安定化前進
 	printf("PhaseNavigation 2.BalanceForward\n");
 	Vector2D startPos = pos->GetSelfPos();
-	poseDrivingControl.SetParams(150.0,0,TAIL_ANGLE,true);
+	ExponentialSmoothingFilter expFilter(0.9,100.0);
+	float forward;
 	driveWheels->GetAngles(&angleLeft, &angleRight);
     while (true){
-		poseDrivingControl.Driving();
-
 		pos->UpdateSelfPos();
 		posSelf = pos->GetSelfPos();
 		thetaSelf = pos->GetTheta();
+
+		forward = expFilter.GetValue(100.0);
+		poseDrivingControl.SetParams(forward,0.0,TAIL_ANGLE,true);
+		poseDrivingControl.Driving();
 
 		if ((frameCount++) % log_refleshrate == 0) {
 				driveWheels->GetAngles(&angleLeft, &angleRight);
 				driveWheels->GetPWMs(&pwmLeft, &pwmRight);
 				fprintf(file,"%f,%f,%f,%f,%f,%f,%d,%f,%d,%d,%f,%f,%f,%f,%f\n",
 					cl->GetValue(), envViewer->GetLuminance(), postureSensor.GetAnglerVelocity(),envViewer->GetUSDistance(),
-					40.0,0.0,
+					forward,0.0,
 					tail->GetPWM(),tail->GetAngle(),
 					pwmLeft, pwmRight, angleLeft, angleRight,
 					posSelf.x, posSelf.y, thetaSelf);
 		}     
 
 		driveWheels->GetAngles(&angleLeft, &angleRight);
-		if(posSelf.DistanceFrom(startPos)>7){
+		if(posSelf.DistanceFrom(startPos)>10){
 			break;
 		}	
 
@@ -144,7 +147,7 @@ void PhaseNavigation::Execute(){
 	// 3. 輝度ライントレース
 	printf("PhaseNavigation 3.Linetrace\n");
 	LineLuminance line;
-	ExponentialSmoothingFilter expFilter(0.5,150.0);
+	ExponentialSmoothingFilter expFilter(0.5,100.0);
 	float forward;
     while (true) {        
 		line.CalcTurnValue();

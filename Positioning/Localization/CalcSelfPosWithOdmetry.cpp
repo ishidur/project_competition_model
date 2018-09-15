@@ -28,28 +28,18 @@ Vector2D CalcSelfPosWithOdmetry::DeadReckoningWithOdmetry( Vector2D& _vSelf, Vec
 	//角度を取得
 	wheels->GetAngles( &leftAngle, &rightAngle );
 
-	float delta_rigthAngle = (rightAngle - rightAngle_bf);
-	float delta_leftAngle = (leftAngle - leftAngle_bf);
-
-    float rightdphi = delta_rigthAngle*M_PI/180.0; // radian
-    float leftdphi  = delta_leftAngle*M_PI/180.0;   // radian
+    float rightdphi = (rightAngle - rightAngle_bf)*M_PI/180.0; // radian
+    float leftdphi  = (leftAngle - leftAngle_bf)*M_PI/180.0;   // radian
 
     float u_right = DriveWheels::tireRadius * rightdphi;
     float u_left  = DriveWheels::tireRadius * leftdphi;
 
-    Vector2D tmp_v(0,0);
-    tmp_v.x = cos(theta) * (u_left + u_right)/2.0;
-    tmp_v.y = sin(theta) * (u_left + u_right)/2.0;
-
-    Vector2D tmp_vself(0,0);
-    tmp_vself = _vSelf + tmp_v;
-
-    theta += (u_right - u_left)/DriveWheels::tireDistance;
-
     rightAngle_bf = rightAngle;
     leftAngle_bf = leftAngle;
 
-    return tmp_vself;
+    Vector2D tmp_v(cos(theta) * (u_left + u_right)/2.0, sin(theta) * (u_left + u_right)/2.0);
+    theta += (u_right - u_left)/DriveWheels::tireDistance;
+    return _vSelf + tmp_v;
 }
 
 float CalcSelfPosWithOdmetry::GetTheta(){
