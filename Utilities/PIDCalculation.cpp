@@ -23,17 +23,17 @@ float PIDCalculation::GetPIDValue(float input, float target) {
     float error = target - input;
     this->errorISum = error + this->errorISum * this->ISumParam;
     float value;
-    //1‰ñ–Ú‚ÍD€‚ªƒZƒbƒg‚³‚ê‚Ä‚¢‚È‚¢‚Ì‚ÅPI§Œä
+    //1å›žç›®ã¯Dé …ãŒã‚»ãƒƒãƒˆã•ã‚Œã¦ã„ãªã„ã®ã§PIåˆ¶å¾¡
     if( this->isSetErrorBefore == false ){
     	this->isSetErrorBefore = true;//
     	value = this->PParam * error + this->IParam * this->errorISum;
 
     }
-    //2‰ñ–ÚˆÈ~‚ÍD€‚ªƒZƒbƒg‚³‚ê‚Ä‚¢‚é‚Ì‚ÅPID§Œä
+    //2å›žç›®ä»¥é™ã¯Dé …ãŒã‚»ãƒƒãƒˆã•ã‚Œã¦ã„ã‚‹ã®ã§PIDåˆ¶å¾¡
     else{
         value = this->PParam * error + this->IParam * this->errorISum + this->DParam * (error - this->errorBefore);
     }
-    //D€—p‚ÌŽc·XV
+    //Dé …ç”¨ã®æ®‹å·®æ›´æ–°
     this->errorBefore = error;
 
     return value;
