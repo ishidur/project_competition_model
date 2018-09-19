@@ -22,6 +22,13 @@ void LineLuminance::CalcTurnValueByRGB(){
     turn = pidCalc->GetPIDValue(col, 50);
 }
 
+void LineLuminance::CalcTurnValueByRGBStand(){
+    int r, g, b;
+    environmentViewer->GetRGB(&r, &g, &b);
+    float col = (filter->GetValue(r)-10.0)/(122.0-10.0) * 100.0;
+    turn = pidCalc->GetPIDValue(col, 50);
+}
+
 float LineLuminance::GetTurn(){
     return turn;
 }

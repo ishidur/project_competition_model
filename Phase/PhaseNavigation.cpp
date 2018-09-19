@@ -74,7 +74,7 @@ void PhaseNavigation::Execute(){
 	int tmp_high_speed_gyro_sum = 0;
 	float now_gyro;
 
-	poseDrivingControl.SetParams(tmp_high_speed_start_forward,0.0,110,false);
+	poseDrivingControl.SetParams(tmp_high_speed_start_forward,0.0,105,false);
     cl->Reset();
 	while(true){
 		poseDrivingControl.Driving();
@@ -143,17 +143,16 @@ void PhaseNavigation::Execute(){
 		tslp_tsk(4);
     }
 
-#if 0
+#if 1
 	// 3. 輝度ライントレース
 	printf("PhaseNavigation 3.Linetrace\n");
 	LineLuminance line;
-	ExponentialSmoothingFilter expFilter(0.5,100.0);
-	float forward;
+	ExponentialSmoothingFilter expFilter2(0.5,100.0);
     while (true) {        
-		line.CalcTurnValue();
+		line.CalcTurnValueByRGBStand();
 		turn = line.GetTurn();
 
-		forward = expFilter.GetValue(90.0);
+		forward = expFilter2.GetValue(100.0);
 		poseDrivingControl.SetParams(forward,turn,TAIL_ANGLE,true);
 		poseDrivingControl.Driving();
 

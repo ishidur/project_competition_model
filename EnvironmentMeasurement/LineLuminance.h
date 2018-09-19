@@ -20,6 +20,7 @@ namespace EnvironmentMeasurement{
 			LineLuminance();
 			void CalcTurnValue();
 			void CalcTurnValueByRGB();
+			void CalcTurnValueByRGBStand();
 			float GetTurn();
 	};
 
