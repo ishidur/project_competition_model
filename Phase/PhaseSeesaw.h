@@ -36,14 +36,6 @@ namespace Phase{
 			PhaseSeesaw();
 			void Execute() override;
 			bool IsFinish();
-
-		private:
-			bool IsStartForward( float _x );
-			bool IsStartEnter( float _x );
-			bool IsStartSlowForward( float _x );
-			bool IsStartBackForward( float _x );
-			bool IsStartStopForward( float _x );
-			bool IsEndStopForward( float _x );
 	};
 
 }  // namespace Phase

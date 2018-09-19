@@ -4,7 +4,7 @@
 using namespace Utilities;
 using namespace Positioning::MapInfomation;
 
-Circle::Circle( Vector2D& _vc, float _r, float _direction ):posCenter(_vc),r(_r),direction(_direction),ve(0,0)
+Circle::Circle( Vector2D& _vc, float _r, float _direction, float _rho ):posCenter(_vc),r(_r),direction(_direction),rho(_rho),ve(0,0)
 {
 }
 
@@ -76,7 +76,12 @@ Vector2D Circle::GetNearestPos( Vector2D& _v1 )
 	return v_ret;
 }
 
-Vector2D Circle::Get_Ve()
+Vector2D Circle::GetVe()
 {
 	return ve;
+}
+
+float Circle::GetRho()
+{
+	return rho;
 }

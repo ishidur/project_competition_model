@@ -11,12 +11,13 @@ TailControl::TailControl(){
 
 void TailControl::SetTargetAngle(int targetAngle){
     this->targetAngle = targetAngle;
-    pidCalc->PIDReStart();//ƒ^[ƒQƒbƒg‚ðXV‚·‚é‚Ì‚ÅÄƒXƒ^[ƒg
+    pidCalc->PIDReStart();//ã‚¿ãƒ¼ã‚²ãƒƒãƒˆã‚’æ›´æ–°ã™ã‚‹ã®ã§å†ã‚¹ã‚¿ãƒ¼ãƒˆ
 }
 
 void TailControl::RotateTowardTarget(){
     float pwm = pidCalc->GetPIDValue(tail->GetAngle(), targetAngle);
-    tail->SetPWM((int)pwm);
+	if(pwm>100) pwm = 100; else if(pwm<-100) pwm = -100;
+    tail->SetPWM((signed char)pwm);
 }
 
 void TailControl::Stop(){

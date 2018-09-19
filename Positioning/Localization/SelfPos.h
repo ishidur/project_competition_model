@@ -17,7 +17,8 @@ namespace Positioning{
 				float thetaSelf;
 
 				Vector2D vSelfVel;
-				
+				Vector2D vSelfInit;
+
 				Positioning::MapInfomation::FieldMap fieldMap;
 				Positioning::Localization::CalcSelfPosWithOdmetry* Odmetry;
 
@@ -26,11 +27,13 @@ namespace Positioning{
 				static SelfPos* GetInstance();
 
 				void Start();
+				void UpdateSelfPosComp( Vector2D& _vSelf, Vector2D& _vSelfVel );
 				void UpdateSelfPos();
 				Vector2D GetSelfPos();
 				float GetTheta();
 				Vector2D GetSelfVelocity();
-
+				Vector2D GetMean();
+				float GetPhi();
 				private:
 					int ReadFirstPos(const char* course_filename, const char* pos_filename);
 

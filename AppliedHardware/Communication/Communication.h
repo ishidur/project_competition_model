@@ -27,6 +27,7 @@ namespace AppliedHardware{
 				void Disconnect();
 				bool IsConnect();
 				bool GetTaskStop();
+				void SendString(char* mes);
 		};
 
 	}  // namespace Communication

@@ -26,3 +26,7 @@ void Bluetooth::Disconnect(){
         isConnect = false;
     }
 }
+
+bool Bluetooth::IsConnect(){
+    return ev3_bluetooth_is_connected();
+}

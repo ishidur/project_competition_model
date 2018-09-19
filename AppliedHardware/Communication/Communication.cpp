@@ -64,3 +64,7 @@ bool Communication::IsConnect(){
 bool Communication::GetTaskStop(){
     return taskStop;
 }
+
+void Communication::SendString(char* mes){
+
+}
