@@ -66,5 +66,5 @@ bool Communication::GetTaskStop(){
 }
 
 void Communication::SendString(char* mes){
-
+    protocol->SendString(mes);
 }

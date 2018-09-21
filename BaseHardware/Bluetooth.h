@@ -10,8 +10,6 @@ namespace BaseHardware{
 		public:
 			Bluetooth();
 			void Connect() override;
-			unsigned char GetChar() override;
-			void SendChar(unsigned char c) override;
 			void Disconnect() override;
 			bool IsConnect();
 	};
