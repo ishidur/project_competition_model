@@ -20,7 +20,7 @@ void CalcSelfPosWithOdmetry::Start( Vector2D& _vSelfInit, float _theta_init ){
     theta = _theta_init;
     thetaInit = _theta_init;
     mean_cnt = 0;
-    is_mean = false;
+    is_mean = true;
 }
 
 float CalcSelfPosWithOdmetry::CalcTheta( Vector2D& _vSelfVel ){

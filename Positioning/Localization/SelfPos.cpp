@@ -15,7 +15,7 @@ SelfPos* SelfPos::singletonInstance = nullptr;
 
 SelfPos::SelfPos():vSelf(SELF_POS_X_INIT,SELF_POS_Y_INIT),thetaSelf(SELF_POS_THETA_INIT),vSelfVel(SELF_VEL_X_INIT,SELF_VEL_Y_INIT){
 	Odmetry = new CalcSelfPosWithOdmetry();
-	ReadFirstPos("/ev3rt/res/course/course.txt", "/ev3rt/res/course/pos_param.txt");
+	ReadFirstPos("/ev3rt/res/course/course.txt", "/ev3rt/res/course/pos_param_mini.txt");
 }
 
 SelfPos* SelfPos::GetInstance(){
