@@ -12,17 +12,13 @@ void Bluetooth::Connect(){
     isConnect = true;
 }
 
-unsigned char Bluetooth::GetChar(){
-    return fgetc(this->comHandle);
-}
-
-void Bluetooth::SendChar(unsigned char c){
-    fputc(c, this->comHandle);
-}
-
 void Bluetooth::Disconnect(){
     if(isConnect){
         fclose(this->comHandle);
         isConnect = false;
     }
+}
+
+bool Bluetooth::IsConnect(){
+    return ev3_bluetooth_is_connected();
 }

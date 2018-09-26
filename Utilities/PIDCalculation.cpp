@@ -8,18 +8,32 @@ using namespace Utilities;
 PIDCalculation::PIDCalculation() {
 }
 
-PIDCalculation::PIDCalculation(const char* filename): errorBefore(0.0),errorISum(0.0) {
+PIDCalculation::PIDCalculation(const char* filename): errorBefore(0.0),errorISum(0.0),isSetErrorBefore(false) {
     ReadPIDParam(filename);
 }
 
 PIDCalculation::PIDCalculation( float _p, float _i, float _i_sum, float _d, float _err_befor, float _err_i_sum ):PParam(_p),IParam(_i),ISumParam(_i_sum),DParam(_d),errorBefore(_err_befor),errorISum(_err_i_sum) {
 }
 
+void PIDCalculation::PIDReStart(){
+	this->isSetErrorBefore = false;
+}
+
 float PIDCalculation::GetPIDValue(float input, float target) {
     float error = target - input;
     this->errorISum = error + this->errorISum * this->ISumParam;
+    float value;
+    //1回目はD項がセットされていないのでPI制御
+    if( this->isSetErrorBefore == false ){
+    	this->isSetErrorBefore = true;//
+    	value = this->PParam * error + this->IParam * this->errorISum;
 
-    float value = this->PParam * error + this->IParam * this->errorISum + this->DParam * (error - this->errorBefore);
+    }
+    //2回目以降はD項がセットされているのでPID制御
+    else{
+        value = this->PParam * error + this->IParam * this->errorISum + this->DParam * (error - this->errorBefore);
+    }
+    //D項用の残差更新
     this->errorBefore = error;
 
     return value;

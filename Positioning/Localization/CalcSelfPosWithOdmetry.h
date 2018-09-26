@@ -14,14 +14,21 @@ namespace Positioning{
 				float rightAngle_bf;
 				float leftAngle_bf;
 				float theta;
+				float thetaInit;
+				Vector2D vSelfInit;
+				Vector2D v_mean;
 				DriveWheels* wheels;
-
+				int mean_cnt;
+				bool is_mean;
+				float phi;
 				float CalcTheta( Vector2D& _vSelfVel );
 			public:
 				CalcSelfPosWithOdmetry();
-				void Start(float theta_init);
+				void Start( Vector2D& _vSelfInit,float _theta_init);
 				Vector2D DeadReckoningWithOdmetry( Vector2D& _vSelf, Vector2D& _vSelfVel );
 				float GetTheta();
+				Vector2D GetMean();
+				float GetPhi();
 		};
 	}  // namespace Localization
 }  // namespace Positioning

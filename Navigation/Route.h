@@ -20,7 +20,10 @@ namespace Navigation{
 			float followRatio;
 
 			Positioning::MapInfomation::VirtualMap* virtualMap;
-
+			bool is_node_change;
+			bool is_finish;
+			float dbg;
+			Vector2D dbg_v;
 		public:
 			Route();
 			void Start();
@@ -29,10 +32,24 @@ namespace Navigation{
 			void Stop();
 
 			void SetDestination();
+			bool IsArriveEndNode();
 			bool IsFinish();
-			void SetFollowRatio(float ratio);
+			bool IsNodeChage();
+			bool IsNextNodeGoal();
+			bool IsArriveNodeGoal();
+			void SetFollowRatio(float _ratio);
 			Vector2D GetNearestPos( Vector2D& _v_selfpos );
 			Vector2D GetVe();
+			float GetRho();
+
+
+			float GetDbg();
+			Vector2D GetDbgV();
+			Vector2D GetNode();
+			Vector2D GetDir();
+			Vector2D GetNodeNow();
+			Vector2D GetDirNow();
+			void ReadRoute();
 	};
 
 }  // namespace Navigation

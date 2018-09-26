@@ -11,8 +11,9 @@ namespace Positioning{
 
 			public:
 				virtual float GetNearestPosDistance()=0;
-				virtual Vector2D GetNearestPos( Vector2D& _v1 )=0;
-				virtual Vector2D Get_Ve()=0;
+				virtual Vector2D GetNearestPos( Vector2D& _v1 )=0;//最近傍位置
+				virtual Vector2D GetVe()=0;	//進行方向単位ベクトル
+				virtual float GetRho()=0;	//曲率
 		};
 	}  // namespace MapInfomation
 }  // namespace Positioning

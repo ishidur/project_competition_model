@@ -5,9 +5,11 @@
 #include "Phase/PhaseExecuter.h"
 #include "AppliedHardware/Communication/Communication.h"
 #include "Balancer/balancer.h"
+#include "DrivingControl/TumbleStop.h"
 
 using namespace Phase;
 using namespace AppliedHardware::Communication;
+using namespace DrivingControl;
 
 // #define DEBUG
 #ifdef DEBUG
@@ -29,6 +31,8 @@ static const motor_port_t
     right_motor       = EV3_PORT_B,
     left_motor        = EV3_PORT_C;
 
+TumbleStop tumbleStop;
+
 void main_task(intptr_t unused){
     printf("app initialize\n");
     initialize();
@@ -40,6 +44,15 @@ void main_task(intptr_t unused){
     tslp_tsk(100);
     ev3_speaker_play_tone(NOTE_C4, 100);
 
+    act_tsk(PHASE_TASK);
+    
+    slp_tsk();
+
+    ev3_stp_cyc(TUMBLE_CYC);
+    ext_tsk();
+}
+
+void phase_task(intptr_t unused){
     printf("app PhaseExecuter\n");
     PhaseExecuter* phaseExecuter = new PhaseExecuter();
     phaseExecuter->ExecutePhases();
@@ -47,6 +60,9 @@ void main_task(intptr_t unused){
 
     ev3_motor_reset_counts(left_motor);
     ev3_motor_reset_counts(right_motor);
+    
+    wup_tsk(MAIN_TASK);
+    
     ext_tsk();
 }
 
@@ -54,11 +70,18 @@ void com_task(intptr_t unused){
     printf("start COM_TASK\n");
     Communication* com = Communication::GetInstance();
     while(1){
-        if(!com->GetTaskStop()){
-            com->ReceiveTask();
-        }   
+        com->ReceiveTask();
         tslp_tsk(10);
     }
+}
+
+void tumble_cyc(intptr_t exinf){
+    act_tsk(TUMBLE_TASK);
+}
+
+void tumble_task(intptr_t exinf){
+    tumbleStop.TumbleStopTask();
+    ext_tsk();
 }
 
 void initialize(){
@@ -83,4 +106,6 @@ void initialize(){
     
     ev3_gyro_sensor_reset(gyro_sensor);
     balance_init();
+
+    ev3_sta_cyc(TUMBLE_CYC);
 }

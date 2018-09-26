@@ -16,16 +16,35 @@ namespace Navigation{
 			Positioning::Localization::SelfPos* selfPos;
 			TargetPos* targetPos;
 			int update_cnt;
+			Vector2D near;
 		public:
 			Navigation();
 			void Start();
 			void Stop();
 			void Update();
 			float GetTurn();
+			float GetEndNodeTurn();
 			void CalcTurn();
+			float GetForward();
+			void CalcForward();
+			bool IsNearGoalSpeedUp();
+			bool IsArriveGoalSpeedDown();
+			bool IsAfterGoalSpeedDown();
+			bool IsEndNode();
 			bool IsFinish();
-
+			float GetDbg();
+			Vector2D GetDbgV();
+			Vector2D GetNode();
+			Vector2D GetDir();
+			float GetRho();
+			Vector2D GetNear();
+			Vector2D GetTgt();
+			float GetTurnBase();
+			float GetCross();
 		};
 
 }  // namespace Navigation
 #endif
+
+
+

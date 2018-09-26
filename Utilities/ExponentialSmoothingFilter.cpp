@@ -4,8 +4,13 @@
 
 using namespace Utilities;
 
-ExponentialSmoothingFilter::ExponentialSmoothingFilter(float AParam){
+ExponentialSmoothingFilter::ExponentialSmoothingFilter(float AParam):valueBefore(0.0){
     this->AParam = AParam;
+}
+
+ExponentialSmoothingFilter::ExponentialSmoothingFilter(float AParam, float valueBefore){
+    this->AParam = AParam;
+    this->valueBefore = valueBefore;
 }
 
 ExponentialSmoothingFilter::ExponentialSmoothingFilter(const char* filename){

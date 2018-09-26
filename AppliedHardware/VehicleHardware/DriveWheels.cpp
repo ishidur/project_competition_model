@@ -4,8 +4,8 @@ using namespace AppliedHardware::VehicleHardware;
 using namespace BaseHardware;
 
 DriveWheels* DriveWheels::singletonInstance = nullptr;
-const float DriveWheels::tireRadius = 49.0/10.0*1.00;
-const float DriveWheels::tireDistance = 175.0/10.0*1.00;
+const float DriveWheels::tireRadius = 49.0/10.0*1.035;
+const float DriveWheels::tireDistance = 175.0/10.0*1.05;
 
 DriveWheels::DriveWheels(){
 	motorLeft = Motor::GetInstance(2);

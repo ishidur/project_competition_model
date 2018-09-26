@@ -19,6 +19,7 @@ namespace BaseHardware{
 
 			float GetValue();
 			void SetLuminanceRange(int white, int black);
+			void GetRGB(int* r, int* g, int* b);
 	};
 
 }  // namespace BaseHardware

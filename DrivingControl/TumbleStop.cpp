@@ -1,9 +1,44 @@
 #include "TumbleStop.h"
+#include <stdlib.h> 
 
-namespace DrivingControl
-{
+using namespace DrivingControl;
+using namespace AppliedHardware::VehicleHardware;
 
-void TumbleStop::TumbleStopTask()
-{
+TumbleStop::TumbleStop() : count(0){
+    tail = Tail::GetInstance();
+    driveWheels = DriveWheels::GetInstance();
 }
-}  // namespace DrivingControl
+
+void TumbleStop::TumbleStopTask(){
+    static bool first_full_flg = false;
+    if(count==TUNBLE_MEMORY_SIZE-1 && !first_full_flg) first_full_flg = true;
+
+    anglerVelocityMemory[count] = postureSensor.GetAnglerVelocity();
+    driveWheels->GetPWMs(&pwmLeft, &pwmRight);
+    averagePWMMemory[count] = ((float)pwmLeft + (float)pwmRight)/2.0;
+    count = (count+1)%TUNBLE_MEMORY_SIZE;
+
+    if(first_full_flg){
+        aveAnglerVel = 0.0;
+        avePWM = 0.0;
+        for(int i=0; i<TUNBLE_MEMORY_SIZE; i++){
+            aveAnglerVel += anglerVelocityMemory[i];
+            avePWM += averagePWMMemory[i];
+        }
+        aveAnglerVel /= (float)TUNBLE_MEMORY_SIZE;
+        avePWM /= (float)TUNBLE_MEMORY_SIZE;
+
+        if(abs(aveAnglerVel)<15.0 && abs(avePWM)==100.0){
+            ter_tsk(PHASE_TASK);
+
+            tslp_tsk(500);
+
+            driveWheels->Stop(true,true);
+            tail->Stop();
+
+            tslp_tsk(2000);
+
+            wup_tsk(MAIN_TASK);
+        }
+    }
+}
