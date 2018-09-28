@@ -31,7 +31,7 @@ static const motor_port_t
     right_motor       = EV3_PORT_B,
     left_motor        = EV3_PORT_C;
 
-TumbleStop tumbleStop;
+TumbleStop* tumbleStop;
 
 void main_task(intptr_t unused){
     printf("app initialize\n");
@@ -43,12 +43,12 @@ void main_task(intptr_t unused){
     ev3_speaker_play_tone(NOTE_C4, 100);
     tslp_tsk(100);
     ev3_speaker_play_tone(NOTE_C4, 100);
-
+    
+    act_tsk(TUMBLE_TASK);
     act_tsk(PHASE_TASK);
     
     slp_tsk();
 
-    ev3_stp_cyc(TUMBLE_CYC);
     ext_tsk();
 }
 
@@ -80,7 +80,11 @@ void tumble_cyc(intptr_t exinf){
 }
 
 void tumble_task(intptr_t exinf){
-    tumbleStop.TumbleStopTask();
+    tumbleStop = new TumbleStop();
+    while(1){
+        tumbleStop->TumbleStopTask();
+        tslp_tsk(100);
+    }
     ext_tsk();
 }
 
@@ -106,6 +110,4 @@ void initialize(){
     
     ev3_gyro_sensor_reset(gyro_sensor);
     balance_init();
-
-    ev3_sta_cyc(TUMBLE_CYC);
 }
