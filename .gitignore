@@ -42,7 +42,8 @@
 .LSOverride
 
 # Icon must end with two \r
-Icon
+Icon
+
 
 # Thumbnails
 ._*
@@ -91,3 +92,4 @@ $RECYCLE.BIN/
 *.lnk
 
 
+a-project_competition_model
