@@ -171,7 +171,6 @@ void PhaseNavigation::Execute(){
 	printf("PhaseNavigation 3.Linetrace\n");
 	LineLuminance line;
 	ExponentialSmoothingFilter expFilter(0.5,150.0);
-<<<<<<< HEAD
 	float tmp_forward = 70;
 
     int filterSize = 20;
@@ -185,16 +184,6 @@ void PhaseNavigation::Execute(){
 	float variance, sum, squaredSum;
 	float nowluminance, lastluminance = envViewer->GetLuminance(), delta;
 	cl->Reset();
-=======
-    int fileterSize = 100;
-    int cnt = 0;
-	float forward;
-    float caribratedBrightnesses[fileterSize]={0.0};
-    float greyBottom = 45.0;
-    float greyTop = 55.0;
-    float varianceCriteria = 5.0;
-    while (true) {        
->>>>>>> f1f0f2c00eed99929c3d92223f3bef1c027e7fcf
 		line.CalcTurnValue();
 		turn = line.GetTurn();
 		poseDrivingControl.SetParams(tmp_forward,turn,TAIL_ANGLE,true);
