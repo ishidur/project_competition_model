@@ -168,14 +168,15 @@ void PhaseNavigation::Execute(){
 	printf("PhaseNavigation 3.Linetrace\n");
 	LineLuminance line;
 	ExponentialSmoothingFilter expFilter(0.5,150.0);
-	float tmp_forward = 100;
+	float tmp_forward = 70;
 	while(1){
 		pos->UpdateSelfPos();
 		posSelf = pos->GetSelfPos();
 		thetaSelf = pos->GetTheta();
 
 		line.CalcTurnValue();
-		turn = line.GetTurn();
+//		turn = line.GetTurn();
+		turn = 0;
 		poseDrivingControl.SetParams(tmp_forward,turn,TAIL_ANGLE,true);
 		poseDrivingControl.Driving();
 
@@ -190,16 +191,20 @@ void PhaseNavigation::Execute(){
 				posSelf.x, posSelf.y, thetaSelf);
 			frameCount = 0;
 		}
-
+#if DBG
 		if((com_count++) > 15){
 			char mes[255];
 			sprintf(mes, "{'x':%f,'y':%f,'theta':%f}\n", posSelf.x, posSelf.y, thetaSelf);
 			com->SendString(mes);
 			com_count = 0;
 		}
-
+#endif
+        if (IsFinish(posSelf)) {
+             break;
+        }
 		tslp_tsk(4);
 	}
+	tslp_tsk(4);
 
 //	仮想ライントレース用
 // 	float tmp_turn = 0;
@@ -292,12 +297,12 @@ void PhaseNavigation::Execute(){
 bool PhaseNavigation::IsFinish(Vector2D posSelf) {
     if(this->course=='R'){//R(Seesaw)
 		// return ( posSelf.x > 0.0 && posSelf.y > 48.0 );
-        // return ( (posSelf.x < 170.0 && posSelf.y < 180.0 )
-		return ( navigation->IsFinish() == true );
+        return (posSelf.x < 192.06 && posSelf.y < 145.96 );
+//		return ( navigation->IsFinish() == true );
     }else if(this->course=='L'){//L(LookUpGate)
 		// return (posSelf.x < 137.0 && posSelf.y > 335.0);
-		return ( navigation->IsFinish() == true );
-//		return (posSelf.x < 0.0 && posSelf.y > 80.0);
+//		return ( navigation->IsFinish() == true );
+		return (posSelf.x < 133.52 && posSelf.y > (339.51-5));
     }
     return (envViewer->GetTouch()||envViewer->GetUSDistance()<15);
 }

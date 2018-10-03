@@ -16,7 +16,7 @@ using namespace EnvironmentMeasurement;
 
 #define LOG
 
-#define TAIL_ANGLE (10)
+#define TAIL_ANGLE (50)
 #define TAIL_STOP_ANGLE (55)
 
 #define OFFSET_FIRSTPOS (0)

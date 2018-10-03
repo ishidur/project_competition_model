@@ -58,17 +58,20 @@ void PhaseGarage::Execute(){
     Vector2D startPos = pos->GetSelfPos();
     Vector2D posSelf(0,0);
     float thetaSelf=0.0;
-    
+
     pos->UpdateSelfPos();
     posSelf = pos->GetSelfPos();
     thetaSelf = pos->GetTheta();
     poseDrivingControl.SetStop(false,false,false);
 
     // ガレージに入るとこまで
-    while(posSelf.DistanceFrom(startPos)<56){
-        line.CalcTurnValueByRGB();//CalcTurnValue();
+//    while(posSelf.DistanceFrom(startPos)<56){
+      while(posSelf.DistanceFrom(startPos)<20){
+
+    line.CalcTurnValueByRGB();//CalcTurnValue();
         turn = -1.0*line.GetTurn();
-        poseDrivingControl.SetParams(20,turn,63,false);
+//        poseDrivingControl.SetParams(20,turn,63,false);
+        poseDrivingControl.SetParams(20,0,63,false);
         poseDrivingControl.Driving();
 
         pos->UpdateSelfPos();
@@ -89,16 +92,42 @@ void PhaseGarage::Execute(){
 
         tslp_tsk(4);
     }
+
     poseDrivingControl.SetStop(true,true,true);
     tslp_tsk(1000); // タイヤ完全停止待機
     poseDrivingControl.SetStop(false,false,false);
 
+    int tail_ang_ave_cnt = 5;
+    float now_tail_ang = 0;
+    float pre_tail_ang = now_tail_ang*tail_ang_ave_cnt;
+
+    int tgt_tail_ang = 70;
+    float forward = -10;
+    float tail_update_cnt = 0;
     // 起き上がり
     while(true){
+    	now_tail_ang += tail->GetAngle();
         if (abs(tail->GetAngle() - 70) < 3) {
             break;
         }
-        poseDrivingControl.SetParams(-10,0,70,false);
+        tail_update_cnt++;
+		if( tail_update_cnt <= tail_ang_ave_cnt ){
+		}else{
+	        if( now_tail_ang <= pre_tail_ang ){
+	        	tgt_tail_ang++;
+	        	forward = -10;
+	        }else if( now_tail_ang > pre_tail_ang + 1 ){
+	        	tgt_tail_ang--;
+	        	forward = 0;
+	        }
+
+			tail_update_cnt = 0;
+			pre_tail_ang = now_tail_ang;
+			now_tail_ang = 0;
+		}
+//        poseDrivingControl.SetParams(-10,0,70,false);
+        poseDrivingControl.SetParams(forward,0,tgt_tail_ang,false);
+
         poseDrivingControl.Driving();
 
         pos->UpdateSelfPos();
@@ -108,8 +137,8 @@ void PhaseGarage::Execute(){
         if ((frameCount++) % log_refleshrate == 0) {
             driveWheels->GetAngles(&angleLeft, &angleRight);
             driveWheels->GetPWMs(&pwmLeft, &pwmRight);
-            fprintf(file,"%f,%f,%lf,%lf,%d,%d,%lf,%lf,%lf\n",
-                timer->Now(),postureSensor.GetAnglerVelocity(), angleLeft, angleRight, pwmLeft, pwmRight, posSelf.x, posSelf.y, thetaSelf);
+            fprintf(file,"%f,%f,%d,%f,%lf,%lf,%d,%d,%lf,%lf,%lf\n",
+                timer->Now(),postureSensor.GetAnglerVelocity(), tail->GetPWM(),tail->GetAngle(),angleLeft, angleRight, pwmLeft, pwmRight, posSelf.x, posSelf.y, thetaSelf);
         }
         tslp_tsk(4);
     }
@@ -117,12 +146,27 @@ void PhaseGarage::Execute(){
     poseDrivingControl.SetStop(true,true,true);
     tslp_tsk(1000); // タイヤ完全停止待機
     poseDrivingControl.SetStop(false,false,false);
+    now_tail_ang = tail->GetAngle();
+    pre_tail_ang = now_tail_ang;
+
     while(true){
-        if (abs(tail->GetAngle() - 80) < 3) {
+    	now_tail_ang = tail->GetAngle();
+
+    	if (abs(tail->GetAngle() - 80) < 3) {
             break;
         }
-        poseDrivingControl.SetParams(0,0,80,false);
-        poseDrivingControl.Driving();
+#if 0
+    	if( now_tail_ang <= pre_tail_ang ){
+        	forward = -10;
+        }else{
+        	forward = 0;
+        }
+        pre_tail_ang = now_tail_ang;
+#endif
+    	poseDrivingControl.SetParams(0,0,80,false);
+//        poseDrivingControl.SetParams(forward,0,80,false);
+
+    	poseDrivingControl.Driving();
 
         pos->UpdateSelfPos();
         posSelf = pos->GetSelfPos();
@@ -131,13 +175,13 @@ void PhaseGarage::Execute(){
         if ((frameCount++) % log_refleshrate == 0) {
             driveWheels->GetAngles(&angleLeft, &angleRight);
             driveWheels->GetPWMs(&pwmLeft, &pwmRight);
-            fprintf(file,"%f,%f,%lf,%lf,%d,%d,%lf,%lf,%lf\n",
-                timer->Now(),postureSensor.GetAnglerVelocity(), angleLeft, angleRight, pwmLeft, pwmRight, posSelf.x, posSelf.y, thetaSelf);
+            fprintf(file,"%f,%f,%d,%f,%lf,%lf,%d,%d,%lf,%lf,%lf\n",
+                timer->Now(),postureSensor.GetAnglerVelocity(),tail->GetPWM(),tail->GetAngle(), angleLeft, angleRight, pwmLeft, pwmRight, posSelf.x, posSelf.y, thetaSelf);
         }
         tslp_tsk(4);
     }
     poseDrivingControl.SetStop(true,true,true);
-    
+
     tslp_tsk(1000); // タイヤ完全停止待機
 	finFlg = true;
 	printf("PhaseGarage Execute done\n");

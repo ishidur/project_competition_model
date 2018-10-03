@@ -58,14 +58,15 @@ void PhaseLookUpGate::Execute(){
     float thetaSelf=0.0;
 
     timer->Reset();
+#if 0
     // 1. ルックアップゲートに入るところ：倒立振子から尻尾着地
     printf("PhaseLookUpGate 1.Deceleration to Land\n");
-    int tau = 2000;	
-	poseDrivingControl.SetParams(0.0,0,60,true);
+    int tau = 2000;
+	poseDrivingControl.SetParams(70,0,70,true);
     while (true) {
         if (timer->Now()>tau) {
             break;
-        }   
+        }
 
 		poseDrivingControl.Driving();
 
@@ -83,17 +84,49 @@ void PhaseLookUpGate::Execute(){
                 pwmLeft, pwmRight, angleLeft, angleRight,
                 posSelf.x, posSelf.y, thetaSelf);
         }
-        
+
         tslp_tsk(4);
     }
     // poseDrivingControl.SetParams(0,0,70,false);
     // poseDrivingControl.SetStop(true,false,false);
     // poseDrivingControl.Driving();
+#endif
 
-    printf("PhaseLookUpGate 1.5.Landing\n");	
-	poseDrivingControl.SetParams(30,0,75,true);
+    while( true ){
+		poseDrivingControl.SetParams(70,0,70,true );
+		poseDrivingControl.Driving();
+		//		poseDrivingControl.DrivingWithOutPIDTail();
+	   if ( tail->GetAngle() >= 65 ) {
+			break;
+		}
+		tslp_tsk(4);
+    }
+	tslp_tsk(4);
+
+	int stop_forward = 50;
+	int stop_forward_0 = 0;
+    while( true ){
+    	if( stop_forward > 10 ){
+    		stop_forward -= 2;
+    	}else{
+    		stop_forward = 10;
+    		stop_forward_0++;
+    		if(stop_forward_0>10){
+    			break;
+    		}
+    	}
+		poseDrivingControl.SetParams(stop_forward,0,85,0);
+		poseDrivingControl.Driving();
+//		poseDrivingControl.DrivingWithOutPIDTail();
+
+		tslp_tsk(4);
+    }
+	tslp_tsk(4);
+
+    printf("PhaseLookUpGate 1.5.Landing\n");
+	poseDrivingControl.SetParams(30,0,63,false);
     while(true){
-        if (abs(tail->GetAngle() - 75) <= 2) {
+        if (abs(tail->GetAngle() - 63) <= 2) {
             break;
         }
 
@@ -113,11 +146,11 @@ void PhaseLookUpGate::Execute(){
                 pwmLeft, pwmRight, angleLeft, angleRight,
                 posSelf.x, posSelf.y, thetaSelf);
         }
-         
+
         tslp_tsk(4);
     }
     poseDrivingControl.SetStop(true,true,true);
-    
+#if 0
 	float gyro_sum = 0.0;
     poseDrivingControl.SetParams(10,0,75,false);
     while(1){
@@ -140,6 +173,7 @@ void PhaseLookUpGate::Execute(){
         tslp_tsk(4);
     }
     tslp_tsk(200);
+#endif
 
     poseDrivingControl.SetParams(0,0,63,false);
     poseDrivingControl.SetStop(false,true,true);
@@ -164,23 +198,24 @@ void PhaseLookUpGate::Execute(){
                 pwmLeft, pwmRight, angleLeft, angleRight,
                 posSelf.x, posSelf.y, thetaSelf);
         }
-         
+
         tslp_tsk(4);
     }
     poseDrivingControl.SetStop(true,true,true);
     tslp_tsk(1000); // タイヤ完全停止待機
-
+#if 0
     // 1.7. 回転して、ラインを発見
     printf("PhaseLookUpGate 1.7.Turn to find line\n");
     envViewer->GetRGB(&r, &g, &b);
-    if(g >= 17){ 
+    if(g >= 17){
         poseDrivingControl.SetParams(-10.0,100,63,false);
         // poseDrivingControl.SetStop(false,false,false);
         timer->Reset();
+
         while (true) {
             if (timer->Now()>1000) {
                 break;
-            }   
+            }
 
             poseDrivingControl.Driving();
 
@@ -198,9 +233,10 @@ void PhaseLookUpGate::Execute(){
                     pwmLeft, pwmRight, angleLeft, angleRight,
                     posSelf.x, posSelf.y, thetaSelf);
             }
-            
+
             tslp_tsk(4);
         }
+
         poseDrivingControl.SetStop(true,true,true);
         tslp_tsk(1000); // タイヤ完全停止待機
 
@@ -235,7 +271,7 @@ void PhaseLookUpGate::Execute(){
         poseDrivingControl.SetStop(true,true,true);
 
         tslp_tsk(1000); // タイヤ完全停止待機
-    }    
+    }
 
     // 2. 前進して、ゲートを通過
     printf("PhaseLookUpGate 2.Forward\n");
@@ -267,7 +303,7 @@ void PhaseLookUpGate::Execute(){
     }
 	poseDrivingControl.SetStop(true,true,true);
     tslp_tsk(1000); // タイヤ完全停止待機
-    
+
     printf("PhaseLookUpGate Clear Single\n");
     // ここまででシングル達成
 
@@ -279,7 +315,7 @@ void PhaseLookUpGate::Execute(){
     while (true) {
         if (timer->Now()>1000) {
             break;
-        }   
+        }
 
         poseDrivingControl.Driving();
 
@@ -297,7 +333,7 @@ void PhaseLookUpGate::Execute(){
                 pwmLeft, pwmRight, angleLeft, angleRight,
                 posSelf.x, posSelf.y, thetaSelf);
         }
-        
+
         tslp_tsk(4);
     }
     poseDrivingControl.SetStop(true,true,true);
@@ -366,7 +402,7 @@ void PhaseLookUpGate::Execute(){
     // printf("PhaseLookUpGate 3.Backward\n");
     // poseDrivingControl.SetParams(-20,0.0,63,false);
     // // poseDrivingControl.SetStop(false,false,false);
-    // while(abs(posSelf.x-startPos.x)>15){		
+    // while(abs(posSelf.x-startPos.x)>15){
     //     // line.CalcTurnValueByRGB();//CalcTurnValue();
 	// 	// turn = line.GetTurn();
 	// 	// poseDrivingControl.SetParams(-10,turn,65,false);
@@ -387,7 +423,7 @@ void PhaseLookUpGate::Execute(){
     //             pwmLeft, pwmRight, angleLeft, angleRight,
     //             posSelf.x, posSelf.y, thetaSelf, r, g, b);
     //    }
-       
+
 	// 	tslp_tsk(4);
     // }
 	poseDrivingControl.SetStop(true,true,true);
@@ -401,7 +437,7 @@ void PhaseLookUpGate::Execute(){
     while (true) {
         if (timer->Now()>1000) {
             break;
-        }   
+        }
 
         poseDrivingControl.Driving();
 
@@ -419,7 +455,7 @@ void PhaseLookUpGate::Execute(){
                 pwmLeft, pwmRight, angleLeft, angleRight,
                 posSelf.x, posSelf.y, thetaSelf);
         }
-        
+
         tslp_tsk(4);
     }
     poseDrivingControl.SetStop(true,true,true);
@@ -484,10 +520,11 @@ void PhaseLookUpGate::Execute(){
 
         tslp_tsk(4);
     }
-	poseDrivingControl.SetStop(true,true,true);
-    
+#endif
+    poseDrivingControl.SetStop(true,true,true);
+
     tslp_tsk(1000); // タイヤ完全停止待機
-   
+
     printf("PhaseLookUpGate Clear Double\n");
      // これでダブル
 
