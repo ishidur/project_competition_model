@@ -29,6 +29,18 @@ void PoseDrivingControl::SetParams(float power, float turn, int poseAngle, bool 
     this->isBalancing = isBalancing;
 }
 
+void PoseDrivingControl::SetParamsTailPWM(float power, float turn, int tailPWM, bool isBalancing){
+    this->power = power;
+    turnDrivingControl.SetPower(power);
+
+    this->turn = turn;
+    turnDrivingControl.SetTurn(turn);
+    
+	tailControl.SetTargetAngle(tailPWM);
+
+    this->isBalancing = isBalancing;
+}
+
 void PoseDrivingControl::SetStop(bool isStopTail, bool isStopLeft, bool isStopRight){
     if(!(this->isStopTail)&&isStopTail) tailControl.Stop();
     this->isStopTail = isStopTail;

@@ -20,6 +20,10 @@ void TailControl::RotateTowardTarget(){
     tail->SetPWM((signed char)pwm);
 }
 
+void TailControl::SetPWM(int pwm){
+        tail->SetPWM((signed char)pwm);
+}
+
 void TailControl::Stop(){
     tail->Stop();
 }

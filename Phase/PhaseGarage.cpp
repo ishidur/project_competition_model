@@ -97,11 +97,11 @@ void PhaseGarage::Execute(){
     tslp_tsk(1000); // タイヤ完全停止待機
     poseDrivingControl.SetStop(false,false,false);
 
-    int tail_ang_ave_cnt = 5;
+    int tail_ang_sum_cnt = 5;
     float now_tail_ang = 0;
-    float pre_tail_ang = now_tail_ang*tail_ang_ave_cnt;
+    float pre_tail_ang = now_tail_ang*tail_sum_ave_cnt;
 
-    int tgt_tail_ang = 70;
+    int tail_pwm = 70;
     float forward = -10;
     float tail_update_cnt = 0;
     // 起き上がり
@@ -111,13 +111,13 @@ void PhaseGarage::Execute(){
             break;
         }
         tail_update_cnt++;
-		if( tail_update_cnt <= tail_ang_ave_cnt ){
+		if( tail_update_cnt <= tail_ang_sum_cnt ){
 		}else{
 	        if( now_tail_ang <= pre_tail_ang ){
-	        	tgt_tail_ang++;
+	        	tail_pwm++;
 	        	forward = -10;
 	        }else if( now_tail_ang > pre_tail_ang + 1 ){
-	        	tgt_tail_ang--;
+	        	tail_pwm--;
 	        	forward = 0;
 	        }
 
@@ -126,7 +126,7 @@ void PhaseGarage::Execute(){
 			now_tail_ang = 0;
 		}
 //        poseDrivingControl.SetParams(-10,0,70,false);
-        poseDrivingControl.SetParams(forward,0,tgt_tail_ang,false);
+        poseDrivingControl.SetParamsTailPWM(forward,0,tail_pwm,false);
 
         poseDrivingControl.Driving();
 

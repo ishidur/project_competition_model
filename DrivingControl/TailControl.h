@@ -17,6 +17,7 @@ namespace DrivingControl{
 			TailControl();
 			void SetTargetAngle(int targetAngle);
 			void RotateTowardTarget();
+			void SetPWM(int pwm);
 			void Stop();
 	};
 

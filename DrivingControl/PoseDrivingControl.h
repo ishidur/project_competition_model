@@ -22,6 +22,7 @@ namespace DrivingControl{
 			PoseDrivingControl();
 			void Driving();
 			void SetParams(float power, float turn, int poseAngle, bool isBalancing);
+			void SetParamsTailPWM(float power, float turn, int tailPWM, bool isBalancing);
 			void SetStop(bool isStopTail, bool isStopLeft, bool isStopRight);
 
 	};
