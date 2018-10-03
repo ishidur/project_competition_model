@@ -4,6 +4,7 @@
 #include "../BaseHardware/Timer.h"
 #include "../DrivingControl/PoseDrivingControl.h"
 #include "../AppliedHardware/VehicleHardware/Tail.h"
+#include "../AppliedHardware/VehicleHardware/PowerSource.h.h"
 #include "../AppliedHardware/VehicleHardware/PostureSensor.h"
 #include "../AppliedHardware/VehicleHardware/DriveWheels.h"
 #include "../Positioning/Localization/SelfPos.h"
@@ -30,6 +31,7 @@ void PhaseGarage::Execute(){
     ev3_speaker_play_tone(440, 50);
 
     Tail* tail = Tail::GetInstance();
+    PowerSource* powerSource = PowerSource::GetInstance();
     Timer* timer = Timer::GetInstance();
 
     PostureSensor postureSensor; 
@@ -99,9 +101,9 @@ void PhaseGarage::Execute(){
 
     int tail_ang_sum_cnt = 5;
     float now_tail_ang = 0;
-    float pre_tail_ang = now_tail_ang*tail_sum_ave_cnt;
+    float pre_tail_ang = now_tail_ang*tail_ang_sum_cnt;
 
-    int tail_pwm = 70;
+    int tail_pwm = 0;
     float forward = -10;
     float tail_update_cnt = 0;
     // 起き上がり

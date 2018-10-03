@@ -17,11 +17,11 @@ void TailControl::SetTargetAngle(int targetAngle){
 void TailControl::RotateTowardTarget(){
     float pwm = pidCalc->GetPIDValue(tail->GetAngle(), targetAngle);
 	if(pwm>100) pwm = 100; else if(pwm<-100) pwm = -100;
-    tail->SetPWM((signed char)pwm);
+    tail->SetPWM((float)pwm);
 }
 
 void TailControl::SetPWM(int pwm){
-        tail->SetPWM((signed char)pwm);
+        tail->SetPWM((float)pwm);
 }
 
 void TailControl::Stop(){

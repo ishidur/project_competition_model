@@ -2,6 +2,8 @@
 #define APPLIEDHARDWARE_VEHICLEHARDWARE_TAIL_H
 
 #include "../../BaseHardware/Motor.h"
+#include "../../Balancer/balancer_private.h"
+#include "PowerSource.h"
 
 namespace AppliedHardware{
 	namespace VehicleHardware{
@@ -11,10 +13,11 @@ namespace AppliedHardware{
 				signed char pwm;
 
 				BaseHardware::Motor* tailMotor;
+				PowerSource powerSource;
 
 			public:
 				static Tail* GetInstance();
-				void SetPWM(signed char pwm);
+				void SetPWM(float pwm);
 				float GetAngle();
 				signed char GetPWM();
 				void Stop();

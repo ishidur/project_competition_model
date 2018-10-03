@@ -16,8 +16,10 @@ Tail* Tail::GetInstance(){
 	return singletonInstance;
 }
 
-void Tail::SetPWM(signed char pwm){
-	tailMotor->SetPWM(pwm);
+void Tail::SetPWM(float pwm){
+    // バッテリーの電圧値で補正？
+    float corrected_pwm = pwm * 10.0F / ((BATTERY_GAIN * powerSource.GetVoltage()) - BATTERY_OFFSET);
+	tailMotor->SetPWM((signed char) corrected_pwm);
 }
 
 float Tail::GetAngle(){
