@@ -59,7 +59,7 @@ bool InitEnvironmentSensor::LoadCalibrationLight(int &white, int &black){
 
     char param_name[255] = {'\0'};
     int param = 0;
-    FILE* option_file = fopen("ev3rt/res/calibration.txt","r");
+    FILE* option_file = fopen("ev3rt/res/course/calibration.txt","r");
     assert(option_file != NULL);
 
     while(fscanf(option_file,"%s %d", &param_name[0], &param)!=EOF){

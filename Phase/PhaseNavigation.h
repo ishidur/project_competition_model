@@ -6,6 +6,7 @@
 #include "../AppliedHardware/VehicleHardware/DriveWheels.h"
 #include "../Positioning/Localization/SelfPos.h"
 #include "../Utilities/Vector2D.h"
+#include "../AppliedHardware/Communication/Communication.h"
 
 #include "../Navigation/Navigation.h"
 
@@ -16,10 +17,11 @@ namespace Phase{
 	class PhaseNavigation : public PhaseBase{
 		private:
 			DrivingControl::PoseDrivingControl poseDrivingControl;
-			Navigation::Navigation navigation;
+			Navigation::Navigation *navigation;
 			AppliedHardware::EnvironmentSensor::EnvironmentViewer* envViewer;
-			Positioning::Localization::SelfPos* pos; 
+			Positioning::Localization::SelfPos* pos;
 			AppliedHardware::VehicleHardware::DriveWheels* driveWheels;
+			AppliedHardware::Communication::Communication* com;
 
 			char course;
 
@@ -28,7 +30,6 @@ namespace Phase{
 			void Execute() override;
 			void Navigation();
 			bool IsFinish(Utilities::Vector2D posSelf);
-
 		private:
 			int ReadCourse(const char* filename);
 	};

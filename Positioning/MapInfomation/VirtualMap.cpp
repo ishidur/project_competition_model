@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "ev3api.h"
 
 using namespace Utilities;
 using namespace Positioning::MapInfomation;
@@ -41,25 +42,49 @@ Edge* VirtualMap::GetEdge(int index)
 void VirtualMap::ReadMap()
 {
 	char param_name[255];
-	float param[5];
+	float param[6];
 
-	FILE* map_file = fopen("/ev3rt/res/navigation/map_params.txt","r");
+	// course
+	char course;
+
+	FILE* course_file = fopen("/ev3rt/res/course/course.txt","r");
+	if(course_file==NULL){
+		printf("load course file fail\n");
+		assert(course_file != NULL);
+	}
+
+	char course_param_name[255] = {'\0'};
+	fscanf(course_file,"%s %c", &course_param_name[0], &course);
+	fclose(course_file);
+    printf("load course: %c\n", course);
+
+    //map
+    FILE* map_file = NULL;
+
+    //R
+    if( course == 'R' ){
+    	map_file = fopen("/ev3rt/res/navigation/map_params_R.txt","r");
+    }
+    //L
+    else{
+    	map_file = fopen("/ev3rt/res/navigation/map_params_L.txt","r");
+    }
 
 	if( map_file == NULL ){
-//		assert(map_file != NULL);
 		printf("load map file fail\n");
+		assert(map_file != NULL);
 	}
     else{
 		printf("load map file success\n");
-		while(fscanf(map_file,"%s %f %f %f %f %f", &param_name[0], &param[0], &param[1], &param[2], &param[3], &param[4] )!=EOF){
+		while(fscanf(map_file,"%s %f %f %f %f %f %f", &param_name[0], &param[0], &param[1], &param[2], &param[3], &param[4], &param[5] )!=EOF){
+			//Node
 			if(!strcmp(param_name,"Node:")){
 				//Listサイズよりデータ数が多い場合は、assert
 				if( node_index < LIST_SIZE ){
-					Vector2D tmp_v_node(0,0);
+					Vector2D tmp_v_pos( param[0] ,param[1] );
+					Vector2D tmp_v_direction( param[2] ,param[3] );
 
-					tmp_v_node.x = param[0];
-					tmp_v_node.y = param[1];
-					NodeList[node_index] = new Node( tmp_v_node, param[2] );
+					NodeList[node_index] = new Node( tmp_v_pos, tmp_v_direction, param[4] );
 					node_index++;
 				}
 				else{
@@ -71,11 +96,9 @@ void VirtualMap::ReadMap()
 			else if(!strcmp(param_name,"Line:")){
 				//Listサイズよりデータ数が多い場合は、assert
 				if( edge_index < LIST_SIZE ){
-					Vector2D tmp_v_line(0,0);
+					Vector2D tmp_v_line( param[3], param[4] );
 
-					tmp_v_line.x = param[3];
-					tmp_v_line.y = param[4];
-					EdgeList[edge_index] = new Line( param[0], param[1], param[2], tmp_v_line);
+					EdgeList[edge_index] = new Line( param[0], param[1], param[2], tmp_v_line, param[5] );
 					edge_index++;
 				}
 				else{
@@ -86,11 +109,9 @@ void VirtualMap::ReadMap()
 			else if(!strcmp(param_name,"Circle:")){
 				//Listサイズよりデータ数が多い場合は、assert
 				if( edge_index < LIST_SIZE ){
-					Vector2D tmp_v_circle(0,0);
-					tmp_v_circle.x = param[0];
-					tmp_v_circle.y = param[1];
+					Vector2D tmp_v_circle( param[0], param[1]);
 
-					EdgeList[edge_index] = new Circle( tmp_v_circle, param[2],param[3] );
+					EdgeList[edge_index] = new Circle( tmp_v_circle, param[2], param[3], param[4] );
 					edge_index++;
 				}else{
 					//assertにする
@@ -101,4 +122,3 @@ void VirtualMap::ReadMap()
 		fclose(map_file);
 	}
 }
-

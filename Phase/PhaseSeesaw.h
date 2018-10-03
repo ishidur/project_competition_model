@@ -2,6 +2,7 @@
 #define PHASE_PHASE_SEESAW_H
 
 #include "PhaseBase.h"
+#include <stdio.h>
 
 #include "../BaseHardware/Timer.h"
 #include "../DrivingControl/PoseDrivingControl.h"
@@ -28,19 +29,13 @@ namespace Phase{
 
 			int tmp_log_cnt;
 			int tmp_stop_cnt;
+			
+			FILE* file;
 
 		public:
 			PhaseSeesaw();
 			void Execute() override;
 			bool IsFinish();
-
-		private:
-			bool IsStartFoward( float _x );
-			bool IsStartEnter( float _x );
-			bool IsStartSlowFoward( float _x );
-			bool IsStartBackFoward( float _x );
-			bool IsStartStopFoward( float _x );
-			bool IsEndStopFoward( float _x );
 	};
 
 }  // namespace Phase

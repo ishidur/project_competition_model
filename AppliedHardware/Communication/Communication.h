@@ -14,6 +14,7 @@ namespace AppliedHardware{
 				unsigned char receivedBuffer[255];
 
 				bool taskStop;
+				int count;
 
 			public:
 				Communication();
@@ -26,6 +27,7 @@ namespace AppliedHardware{
 				void Disconnect();
 				bool IsConnect();
 				bool GetTaskStop();
+				void SendString(char* mes);
 		};
 
 	}  // namespace Communication

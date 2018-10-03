@@ -22,8 +22,8 @@ void PoseDrivingControl::SetParams(float power, float turn, int poseAngle, bool 
     turnDrivingControl.SetTurn(turn);
 
     if( this->poseAngle != poseAngle ){
-        this->poseAngle = poseAngle;
-        tailControl.SetTargetAngle(poseAngle);
+		this->poseAngle = poseAngle;
+		tailControl.SetTargetAngle(poseAngle);
     }
 
     this->isBalancing = isBalancing;

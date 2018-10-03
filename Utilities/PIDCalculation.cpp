@@ -16,7 +16,7 @@ PIDCalculation::PIDCalculation( float _p, float _i, float _i_sum, float _d, floa
 }
 
 void PIDCalculation::PIDReStart(){
-    this->isSetErrorBefore = false;
+	this->isSetErrorBefore = false;
 }
 
 float PIDCalculation::GetPIDValue(float input, float target) {
@@ -25,8 +25,8 @@ float PIDCalculation::GetPIDValue(float input, float target) {
     float value;
     //1回目はD項がセットされていないのでPI制御
     if( this->isSetErrorBefore == false ){
-        this->isSetErrorBefore = true;//
-        value = this->PParam * error + this->IParam * this->errorISum;
+    	this->isSetErrorBefore = true;//
+    	value = this->PParam * error + this->IParam * this->errorISum;
 
     }
     //2回目以降はD項がセットされているのでPID制御

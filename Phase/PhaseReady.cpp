@@ -1,4 +1,5 @@
 #include "PhaseReady.h"
+#include <string.h>
 #include "../BaseHardware/Bluetooth.h"
 
 using namespace Phase;
@@ -13,13 +14,16 @@ PhaseReady::PhaseReady(){
 }
 
 void PhaseReady::Execute(){
+	printf("PhaseReady Execute\n");
 	PoseDrivingControl poseDrivingControl;
 	com->SetProtocol(new Bluetooth());
 	com->Connect();
 
-	poseDrivingControl.SetStop(true, true, true);
+	poseDrivingControl.SetStop(false, true, true);
 
+    tailControl.SetTargetAngle(85);
     while (true) {
+        tailControl.RotateTowardTarget();
         if (IsGetStartCommand()) {
             break;
         }
@@ -29,12 +33,16 @@ void PhaseReady::Execute(){
     com->Disconnect();
 
 	finFlg = true;
+	printf("PhaseReady Execute Done\n");
 }
 
 bool PhaseReady::IsGetStartCommand(){
+    printf("BT Connext:%d\n", com->IsConnect());
     if(com->IsConnect()){
-        unsigned char mes[255] = {0};
+        unsigned char mes[255] = {};
+        memset(mes,'\0',255);
         com->GetReceiveMessage(mes);
+        if(mes[0]!='\0') printf("BT:%s\n",mes);
         return envViewer->GetTouch() || mes[0]=='s';
     }else{
         return envViewer->GetTouch();

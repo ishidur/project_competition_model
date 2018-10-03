@@ -2,11 +2,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#define SELF_POS_X_INIT 499.14	//Lã‚³ãƒ¼ã‚¹(æ¤œè¨Žç”¨åˆæœŸä½ç½®xï¼‰
-#define SELF_POS_Y_INIT 339.51	//Lã‚³ãƒ¼ã‚¹(æ¤œè¨Žç”¨åˆæœŸä½ç½®yï¼‰
-#define SELF_POS_THETA_INIT 3.141592	//Lã‚³ãƒ¼ã‚¹(æ¤œè¨Žç”¨åˆæœŸè§’åº¦ï¼‰
-#define SELF_VEL_X_INIT -1		//Lã‚³ãƒ¼ã‚¹(æ¤œè¨Žç”¨åˆæœŸé€Ÿåº¦xï¼‰
-#define SELF_VEL_Y_INIT 0		//Lã‚³ãƒ¼ã‚¹(æ¤œè¨Žç”¨åˆæœŸé€Ÿåº¦yï¼‰
+#define SELF_POS_X_INIT 499.14	//LƒR[ƒX(ŒŸ“¢—p‰ŠúˆÊ’uxj
+#define SELF_POS_Y_INIT 339.51	//LƒR[ƒX(ŒŸ“¢—p‰ŠúˆÊ’uyj
+#define SELF_POS_THETA_INIT 3.141592	//LƒR[ƒX(ŒŸ“¢—p‰ŠúŠp“xj
+#define SELF_VEL_X_INIT -1		//LƒR[ƒX(ŒŸ“¢—p‰Šú‘¬“xxj
+#define SELF_VEL_Y_INIT 0		//LƒR[ƒX(ŒŸ“¢—p‰Šú‘¬“xyj
 
 using namespace Positioning::Localization;
 using namespace Utilities;
@@ -15,7 +15,7 @@ SelfPos* SelfPos::singletonInstance = nullptr;
 
 SelfPos::SelfPos():vSelf(SELF_POS_X_INIT,SELF_POS_Y_INIT),thetaSelf(SELF_POS_THETA_INIT),vSelfVel(SELF_VEL_X_INIT,SELF_VEL_Y_INIT){
 	Odmetry = new CalcSelfPosWithOdmetry();
-	ReadFirstPos("/ev3rt/res/course/course.txt", "/ev3rt/res/course/pos_param_garage.txt");
+	ReadFirstPos("/ev3rt/res/course/course.txt", "/ev3rt/res/course/pos_param_mini.txt");
 }
 
 SelfPos* SelfPos::GetInstance(){
@@ -26,7 +26,12 @@ SelfPos* SelfPos::GetInstance(){
 }
 
 void SelfPos::Start(){
-	Odmetry->Start(thetaSelf);
+	Odmetry->Start( vSelf, thetaSelf );
+}
+
+void SelfPos::UpdateSelfPosComp( Vector2D& _vSelf, Vector2D& _vSelfVel ){
+	vSelf = _vSelf;
+	vSelfVel = _vSelfVel;
 }
 
 void SelfPos::UpdateSelfPos(){
@@ -44,6 +49,16 @@ Vector2D SelfPos::GetSelfVelocity(){
 
 float SelfPos::GetTheta(){
 	return thetaSelf;
+}
+
+Vector2D SelfPos::GetMean()
+{
+	return Odmetry->GetMean();
+}
+
+float SelfPos::GetPhi()
+{
+	return Odmetry->GetPhi();
 }
 
 int SelfPos::ReadFirstPos(const char* course_filename, const char* pos_filename) {
@@ -73,7 +88,7 @@ int SelfPos::ReadFirstPos(const char* course_filename, const char* pos_filename)
 	sprintf(course_vel_x_name, "%c_vel_x:",course);
 	char course_vel_y_name[255] = {'\0'};
 	sprintf(course_vel_y_name, "%c_vel_y:",course);
-	
+
     float param;
     while(fscanf(pos_param_file,"%s %f", &param_name[0], &param)!=EOF){
         if(!strcmp(param_name,course_x_name)){

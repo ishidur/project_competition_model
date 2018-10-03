@@ -4,7 +4,7 @@
 using namespace Utilities;
 using namespace Positioning::MapInfomation;
 
-Line::Line( float _a, float _b, float _c, Vector2D& _ve ):aParam(_a),bParam(_b),cParam(_c),veDirection(_ve)
+Line::Line( float _a, float _b, float _c, Vector2D& _ve, float _rho ):aParam(_a),bParam(_b),cParam(_c),veDirection(_ve), rhoParam(_rho)
 {
 }
 
@@ -47,7 +47,12 @@ Vector2D Line::GetNearestPos( Vector2D& _v1 )
 	return v2;
 }
 
-Vector2D Line::Get_Ve()
+Vector2D Line::GetVe()
 {
 	return veDirection;
+}
+
+float Line::GetRho()
+{
+	return rhoParam;
 }

@@ -60,7 +60,7 @@ void PhaseLookUpGate::Execute(){
     timer->Reset();
     // 1. ルックアップゲートに入るところ：倒立振子から尻尾着地
     printf("PhaseLookUpGate 1.Deceleration to Land\n");
-    int tau = 1000;	
+    int tau = 2000;	
 	poseDrivingControl.SetParams(0.0,0,60,true);
     while (true) {
         if (timer->Now()>tau) {
@@ -91,7 +91,7 @@ void PhaseLookUpGate::Execute(){
     // poseDrivingControl.Driving();
 
     printf("PhaseLookUpGate 1.5.Landing\n");	
-	poseDrivingControl.SetParams(20,0,75,true);
+	poseDrivingControl.SetParams(30,0,75,true);
     while(true){
         if (abs(tail->GetAngle() - 75) <= 2) {
             break;

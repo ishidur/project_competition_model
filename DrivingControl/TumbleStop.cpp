@@ -28,13 +28,19 @@ void TumbleStop::TumbleStopTask(){
         aveAnglerVel /= (float)TUNBLE_MEMORY_SIZE;
         avePWM /= (float)TUNBLE_MEMORY_SIZE;
 
-        if(abs(aveAnglerVel)<20.0 && abs(avePWM)==100.0){
+        if(abs(aveAnglerVel)<15.0 && abs(avePWM)==100.0){
+            printf("TumbleStop!\n");
+            ter_tsk(PHASE_TASK);
+
+            tslp_tsk(500);
+
             driveWheels->Stop(true,true);
             tail->Stop();
 
-            ter_tsk(PHASE_TASK);
+            tslp_tsk(2000);
+
             wup_tsk(MAIN_TASK);
-            ev3_stp_cyc(TUMBLE_CYC);
+            ext_tsk();    
         }
     }
 }
