@@ -13,11 +13,11 @@ namespace DrivingControl{
 			int count;
 
 			float anglerVelocityMemory[TUNBLE_MEMORY_SIZE] = {0.0};
-			float aveAnglerVel;
+			float aveAnglerVel=0.0;
 
-			signed char pwmLeft, pwmRight;
+			signed char pwmLeft=0, pwmRight=0;
 			float averagePWMMemory[TUNBLE_MEMORY_SIZE] = {0.0};
-			float avePWM;
+			float avePWM=0.0;
 
 			AppliedHardware::VehicleHardware::PostureSensor postureSensor;
 			AppliedHardware::VehicleHardware::DriveWheels* driveWheels;

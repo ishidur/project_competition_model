@@ -29,6 +29,7 @@ void TumbleStop::TumbleStopTask(){
         avePWM /= (float)TUNBLE_MEMORY_SIZE;
 
         if(abs(aveAnglerVel)<15.0 && abs(avePWM)==100.0){
+            printf("TumbleStop!\n");
             ter_tsk(PHASE_TASK);
 
             tslp_tsk(500);
@@ -39,6 +40,7 @@ void TumbleStop::TumbleStopTask(){
             tslp_tsk(2000);
 
             wup_tsk(MAIN_TASK);
+            ext_tsk();    
         }
     }
 }
