@@ -165,7 +165,7 @@ void PhaseNavigation::Execute(){
 	// 3. 輝度ライントレース
 	printf("PhaseNavigation 3.Linetrace\n");
 	LineLuminance line;
-	ExponentialSmoothingFilter expFilter(0.5,150.0);
+	// ExponentialSmoothingFilter expFilter(0.5,150.0);
 	float tmp_forward = 100;
 	while(1){
 		pos->UpdateSelfPos();
@@ -289,12 +289,12 @@ void PhaseNavigation::Execute(){
 
 bool PhaseNavigation::IsFinish(Vector2D posSelf) {
     if(this->course=='R'){//R(Seesaw)
-		// return ( posSelf.x > 0.0 && posSelf.y > 48.0 );
+		return ( posSelf.x > 0.0 && posSelf.y > 48.0 );
         // return ( (posSelf.x < 170.0 && posSelf.y < 180.0 )
-		return ( navigation->IsFinish() == true );
+		// return ( navigation->IsFinish() == true );
     }else if(this->course=='L'){//L(LookUpGate)
 		// return (posSelf.x < 137.0 && posSelf.y > 335.0);
-		return ( navigation->IsFinish() == true );
+		// return ( navigation->IsFinish() == true );
 //		return (posSelf.x < 0.0 && posSelf.y > 80.0);
     }
     return (envViewer->GetTouch()||envViewer->GetUSDistance()<15);

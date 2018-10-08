@@ -116,14 +116,13 @@ void PhaseSeesaw::Execute(){
     }
 	tslp_tsk(4);
 
-#if 1
     // 2. 傾く
 	printf("PhaseSeesaw 2. Tilting\n"); 
 	tmp_stop_cnt = 0;
 	tmp_forward = 0; //PWM = 0を出力（※gyroの更新ありに変更した）
 	gyro_sum = 0;
 	poseDrivingControl.SetStop(false,false,false);
-	poseDrivingControl.SetParams(tmp_forward,0,105,false);
+	poseDrivingControl.SetParams(tmp_forward,0,55,false);
 	timer->Reset();
     while (true) {
 		pos->UpdateSelfPos();
@@ -159,14 +158,14 @@ void PhaseSeesaw::Execute(){
     // 4.2. 乗り上げ
     ev3_speaker_play_tone(NOTE_C4, 10);
 	printf("PhaseSeesaw 4.2.Forward to ride the Seesaw\n"); 
-	tmp_forward = 100;
-	ExponentialSmoothingFilter expFilter(0.8,0.0);
+	tmp_forward = 50;
+	// ExponentialSmoothingFilter expFilter(0.8,0.0);
 	while (true) {
 		pos->UpdateSelfPos();
 		posSelf = pos->GetSelfPos();
 		thetaSelf = pos->GetTheta();
 
-		tmp_forward = expFilter.GetValue(100.0);
+		// tmp_forward = expFilter.GetValue(100.0);
 		poseDrivingControl.SetParams(tmp_forward,0,TAIL_STOP_ANGLE,true);
 		poseDrivingControl.Driving();	
 
@@ -193,13 +192,14 @@ void PhaseSeesaw::Execute(){
     // 5. 乗り上げ後は、ゆっくり進む
 	printf("PhaseSeesaw 5.Climbing\n"); 
 	tmp_forward = 40;
+	turn = 0;
 	while (true) {
 		pos->UpdateSelfPos();
 		posSelf = pos->GetSelfPos();
 		thetaSelf = pos->GetTheta();
 
-		line.CalcTurnValueByRGBStand();
-		turn = line.GetTurn()*0.5;
+		// line.CalcTurnValueByRGBStand();
+		// turn = line.GetTurn()*0.5;
 		poseDrivingControl.SetParams(tmp_forward,turn,TAIL_STOP_ANGLE,true);
 		poseDrivingControl.Driving();		
 

@@ -20,7 +20,7 @@ void CalcSelfPosWithOdmetry::Start( Vector2D& _vSelfInit, float _theta_init ){
     theta = _theta_init;
     thetaInit = _theta_init;
     mean_cnt = 0;
-    is_mean = true;
+    is_mean = false;
 }
 
 float CalcSelfPosWithOdmetry::CalcTheta( Vector2D& _vSelfVel ){
@@ -78,9 +78,9 @@ Vector2D CalcSelfPosWithOdmetry::DeadReckoningWithOdmetry( Vector2D& _vSelf, Vec
 	rightAngle_bf = rightAngle;
     leftAngle_bf = leftAngle;
 
-    Vector2D tmp_v(cos(theta) * (u_left + u_right)/2.0, sin(theta) * (u_left + u_right)/2.0);
+    Vector2D tmp_v2(cos(theta) * (u_left + u_right)/2.0, sin(theta) * (u_left + u_right)/2.0);
     theta += (u_right - u_left)/DriveWheels::tireDistance;
-    return _vSelf + tmp_v;
+    return _vSelf + tmp_v2;
 }
 
 float CalcSelfPosWithOdmetry::GetTheta(){
