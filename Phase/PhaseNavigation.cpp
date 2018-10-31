@@ -1,5 +1,6 @@
 #include "PhaseNavigation.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "../BaseHardware/Timer.h"
 #include "../DrivingControl/PoseDrivingControl.h"
@@ -22,6 +23,8 @@ using namespace BaseHardware;
 using namespace EnvironmentMeasurement;
 using namespace Positioning::Localization;
 using namespace Utilities;
+
+#define LOG_NAVI
 
 #define TAIL_ANGLE (50)
 
@@ -56,7 +59,7 @@ void PhaseNavigation::Execute(){
     fprintf(file,"clock,caribratedBrightness,gyroSensor,USdist,power,turn,PWMt,motor_ang_t,PWMl,PWMr,motor_ang_l,motor_ang_r,xEst,yEst,thetaSelf\n");
 
     int frameCount = 0;
-    const int log_refleshrate = 15;
+    const int log_refleshrate = 0;
 	int com_count = 0;
 
 
@@ -95,13 +98,13 @@ void PhaseNavigation::Execute(){
 #endif
 		now_gyro = postureSensor.GetAnglerVelocity();
 
-#ifdef LOG
+#ifdef LOG_NAVI
 		if ((frameCount++) > log_refleshrate) {
 			driveWheels->GetAngles(&angleLeft, &angleRight);
 			driveWheels->GetPWMs(&pwmLeft, &pwmRight);
 			fprintf(file,"%f,%f,%f,%f,%f,%f,%d,%f,%d,%d,%f,%f,%f,%f,%f\n",
 				cl->GetValue(), envViewer->GetLuminance(), postureSensor.GetAnglerVelocity(),envViewer->GetUSDistance(),
-				0,0,
+				0.0,0.0,
 				tail->GetPWM(),tail->GetAngle(),
 				pwmLeft, pwmRight, angleLeft, angleRight,
 				posSelf.x, posSelf.y, thetaSelf);
@@ -137,16 +140,16 @@ void PhaseNavigation::Execute(){
 	float pre_foward = 150;
 	poseDrivingControl.SetParams(pre_foward,0,TAIL_ANGLE,true);
 	driveWheels->GetAngles(&angleLeft, &angleRight);
-
     while (true){
 		poseDrivingControl.Driving();
 
 		pos->UpdateSelfPos();
 		posSelf = pos->GetSelfPos();
 		thetaSelf = pos->GetTheta();
-
+		
+		driveWheels->GetAngles(&angleLeft, &angleRight);
+#ifdef LOG_NAVI
 		if ((frameCount++) > log_refleshrate) {
-			driveWheels->GetAngles(&angleLeft, &angleRight);
 			driveWheels->GetPWMs(&pwmLeft, &pwmRight);
 			fprintf(file,"%f,%f,%f,%f,%f,%f,%d,%f,%d,%d,%f,%f,%f,%f,%f\n",
 				cl->GetValue(), envViewer->GetLuminance(), postureSensor.GetAnglerVelocity(),envViewer->GetUSDistance(),
@@ -156,8 +159,9 @@ void PhaseNavigation::Execute(){
 				posSelf.x, posSelf.y, thetaSelf);
 			frameCount = 0;
 		}
+#endif
 
-		if(posSelf.DistanceFrom(startPos)>7){
+		if(posSelf.DistanceFrom(startPos)>7&&angleRight>100){
 			break;
 		}
 
@@ -169,28 +173,80 @@ void PhaseNavigation::Execute(){
 	LineLuminance line;
 	ExponentialSmoothingFilter expFilter(0.5,150.0);
 	float tmp_forward = 70;
-	while(1){
+
+    int filterSize = 20;
+    int cnt = 0;
+	bool max_flg = false, max_flg2 = false;
+    float caribratedBrightnesses[filterSize]={0.0};
+    float var_deviance[filterSize]={0.0};
+    Vector2D poses[filterSize];
+    float greyBottom = 42.0;
+    float greyTop = 48.0;
+    float varianceCriteria = 8.0;
+	float variance=0, sum=0, squaredSum;
+	float nowluminance, sum_l=0, delta;
+	int grey_count = 0;
+	cl->Reset();
+	while(true){
 		pos->UpdateSelfPos();
 		posSelf = pos->GetSelfPos();
 		thetaSelf = pos->GetTheta();
 
-		line.CalcTurnValue();
+		line.CalcTurnValue(30);
 //		turn = line.GetTurn();
 		turn = 0;
 		poseDrivingControl.SetParams(tmp_forward,turn,TAIL_ANGLE,true);
 		poseDrivingControl.Driving();
 
+		nowluminance = envViewer->GetLuminance();
+        caribratedBrightnesses[cnt] = nowluminance;
+		poses[cnt] = posSelf;
+		// lastluminance = nowluminance;
+		if(cnt==filterSize-1&&cl->Now()>2000) max_flg = true;
+		if(max_flg){
+			sum=0.0;
+			squaredSum=0.0;
+			sum_l=0.0;
+			for (int i = 0; i < filterSize;i++) {
+				delta = abs(caribratedBrightnesses[i] - 44);
+				sum += delta;
+				sum_l += caribratedBrightnesses[i];
+				squaredSum += delta*delta;
+			}
+			sum_l /= (float)filterSize;
+			sum /= (float)filterSize;
+			variance = squaredSum/(float)filterSize - sum*sum;
+
+			if (variance<varianceCriteria &&
+					greyBottom<sum_l&&sum_l<greyTop){ 
+					// poses[cnt].DistanceFrom(poses[i_bef])>1.5){
+				ev3_speaker_play_tone(NOTE_C4, 100);
+				poseDrivingControl.SetParams(0,0,TAIL_ANGLE,true);
+				while(1){
+					poseDrivingControl.Driving();
+				}
+			}
+		}
+		// if(greyBottom<nowluminance&&nowluminance<greyTop) grey_count++;
+		// else grey_count=0;
+		// if(grey_count>10){
+        //     ev3_speaker_play_tone(NOTE_D4, 100);
+		// }
+
+#ifdef LOG_NAVI
 		if ((frameCount++) > log_refleshrate) {
 			driveWheels->GetAngles(&angleLeft, &angleRight);
 			driveWheels->GetPWMs(&pwmLeft, &pwmRight);
-			fprintf(file,"%f,%f,%f,%f,%f,%f,%d,%f,%d,%d,%f,%f,%f,%f,%f\n",
+			fprintf(file,"%f,%f,%f,%f,%f,%f,%d,%f,%d,%d,%f,%f,%f,%f,%f,%f,%f\n",
 				cl->GetValue(), envViewer->GetLuminance(), postureSensor.GetAnglerVelocity(),envViewer->GetUSDistance(),
 				tmp_forward,turn,
 				tail->GetPWM(),tail->GetAngle(),
 				pwmLeft, pwmRight, angleLeft, angleRight,
-				posSelf.x, posSelf.y, thetaSelf);
+				posSelf.x, posSelf.y, thetaSelf, variance, sum_l);
 			frameCount = 0;
 		}
+#endif
+		cnt = (cnt+1)%filterSize;
 #if DBG
 		if((com_count++) > 15){
 			char mes[255];
@@ -290,6 +346,7 @@ void PhaseNavigation::Execute(){
 //         tslp_tsk(4);
 //     }
 
+	fclose(file);
 	finFlg = true;
 	printf("PhaseNavigation Execute done\n");
 }

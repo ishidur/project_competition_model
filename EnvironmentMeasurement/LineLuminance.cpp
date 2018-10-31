@@ -15,6 +15,11 @@ void LineLuminance::CalcTurnValue(){
     turn = -1.0*pidCalc->GetPIDValue(luminance, 50);
 }
 
+void LineLuminance::CalcTurnValue(float target){
+    float luminance = filter->GetValue(environmentViewer->GetLuminance());
+    turn = -1.0*pidCalc->GetPIDValue(luminance, target);
+}
+
 void LineLuminance::CalcTurnValueByRGB(){
     int r, g, b;
     environmentViewer->GetRGB(&r, &g, &b);
