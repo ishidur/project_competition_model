@@ -521,6 +521,48 @@ void PhaseLookUpGate::Execute(){
         tslp_tsk(4);
     }
 #endif
+    // グレー探索
+    int filterSize = 20;
+    int cnt = 0;
+	bool max_flg = false;
+    float caribratedBrightnesses[filterSize]={0.0};
+    float greyBottom = 42.0;
+    float greyTop = 48.0;
+    float varianceCriteria = 8.0;
+	float variance=0, sum=0, squaredSum;
+	float nowluminance, sum_l=0, delta;
+	cl->Reset();
+    poseDrivingControl.SetStop(false,false,false);
+    while(true){
+		line.CalcTurnValueByRGB();//CalcTurnValue();
+		turn = -1.0*line.GetTurn();
+		poseDrivingControl.SetParams(20,turn,63,false);
+        poseDrivingControl.Driving();
+        nowluminance = envViewer->GetLuminance();
+        caribratedBrightnesses[cnt] = nowluminance;
+		// lastluminance = nowluminance;
+		if(cnt==filterSize-1&&cl->Now()>2000) max_flg = true;
+		if(max_flg){
+			sum=0.0;
+			squaredSum=0.0;
+			sum_l=0.0;
+			for (int i = 0; i < filterSize;i++) {
+				delta = abs(caribratedBrightnesses[i] - 44);
+				sum += delta;
+				sum_l += caribratedBrightnesses[i];
+				squaredSum += delta*delta;
+			}
+			sum_l /= (float)filterSize;
+			sum /= (float)filterSize;
+			variance = squaredSum/(float)filterSize - sum*sum;
+
+			if (variance<varianceCriteria &&
+					greyBottom<sum_l&&sum_l<greyTop){ 
+                        break; //グレーを検出した位置で渡す
+			}
+		}
+        cnt = (cnt+1)%filterSize;
+    }
     poseDrivingControl.SetStop(true,true,true);
 
     tslp_tsk(1000); // タイヤ完全停止待機
