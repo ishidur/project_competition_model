@@ -4,7 +4,6 @@
 #include "../BaseHardware/Timer.h"
 #include "../DrivingControl/PoseDrivingControl.h"
 #include "../AppliedHardware/VehicleHardware/Tail.h"
-#include "../AppliedHardware/VehicleHardware/PowerSource.h.h"
 #include "../AppliedHardware/VehicleHardware/PostureSensor.h"
 #include "../AppliedHardware/VehicleHardware/DriveWheels.h"
 #include "../Positioning/Localization/SelfPos.h"
@@ -31,7 +30,6 @@ void PhaseGarage::Execute(){
     ev3_speaker_play_tone(440, 50);
 
     Tail* tail = Tail::GetInstance();
-    PowerSource* powerSource = PowerSource::GetInstance();
     Timer* timer = Timer::GetInstance();
 
     PostureSensor postureSensor; 
