@@ -13,6 +13,7 @@
 #include "../Utilities/Vector2D.h"
 #include "../Utilities/ExponentialSmoothingFilter.h"
 
+#define LOG
 using namespace Phase;
 using namespace	DrivingControl;
 using namespace AppliedHardware::VehicleHardware;
@@ -47,7 +48,7 @@ void PhaseNavigation::Execute(){
 	Tail* tail = Tail::GetInstance();
     Timer* cl = Timer::GetInstance();
 	
-	com->Connect();
+	// com->Connect();
 
     FILE* file;
     char filename[255] = {};
@@ -65,7 +66,7 @@ void PhaseNavigation::Execute(){
 	float turn=0.0;
     Vector2D posSelf(0,0);
 	float thetaSelf = 0.0;
-#if 0
+
     pos->Start();
 
 	pos->UpdateSelfPos();
@@ -73,9 +74,8 @@ void PhaseNavigation::Execute(){
 	thetaSelf = pos->GetTheta();
 
 	//navi開始
-	navigation->Start();
-#endif
-
+	// navigation->Start();
+/*
 	// 1. 尻尾スタートダッシュ
 	printf("PhaseNavigation 1.StartDash\n");
 	int tmp_high_speed_start_forward = 0;
@@ -83,16 +83,16 @@ void PhaseNavigation::Execute(){
 	int tmp_high_speed_gyro_sum = 0;
 	float now_gyro;
 
-	poseDrivingControl.SetParams(tmp_high_speed_start_forward,0.0,110,false);
+	poseDrivingControl.SetParams(tmp_high_speed_start_forward,0.0,100,false);
 	poseDrivingControl.SetStop(false,false,false);
 	cl->Reset();
 	while(true){
-		poseDrivingControl.Driving();
-#if 0
 		pos->UpdateSelfPos();
 		posSelf = pos->GetSelfPos();
 		thetaSelf = pos->GetTheta();
-#endif
+
+		poseDrivingControl.Driving();
+
 		now_gyro = postureSensor.GetAnglerVelocity();
 
 #ifdef LOG
@@ -101,7 +101,7 @@ void PhaseNavigation::Execute(){
 			driveWheels->GetPWMs(&pwmLeft, &pwmRight);
 			fprintf(file,"%f,%f,%f,%f,%f,%f,%d,%f,%d,%d,%f,%f,%f,%f,%f\n",
 				cl->GetValue(), envViewer->GetLuminance(), postureSensor.GetAnglerVelocity(),envViewer->GetUSDistance(),
-				0,0,
+				0.0,0.0,
 				tail->GetPWM(),tail->GetAngle(),
 				pwmLeft, pwmRight, angleLeft, angleRight,
 				posSelf.x, posSelf.y, thetaSelf);
@@ -113,7 +113,7 @@ void PhaseNavigation::Execute(){
     	//切り替え条件成立かチェック
         //5ms×10回≒50msマスクする→検討した結果から決定
         if( (tmp_high_speed_start_cnt++)>10 ){
-        	if( tmp_high_speed_gyro_sum > 1500 || (tmp_high_speed_gyro_sum > 900 && now_gyro > 80)){
+        	if( tmp_high_speed_gyro_sum > 1400 || (tmp_high_speed_gyro_sum > 800 && now_gyro > 80)){
     			//角速度80より大きくなったら次の処理
     			break;
     		}
@@ -125,16 +125,17 @@ void PhaseNavigation::Execute(){
 	// 2. 初期安定化前進
 	printf("PhaseNavigation 2.BalanceForward\n");
 	//移動した
-    pos->Start();
-	pos->UpdateSelfPos();
-	posSelf = pos->GetSelfPos();
-	thetaSelf = pos->GetTheta();
+    // pos->Start();
+	
+	// pos->UpdateSelfPos();
+	// posSelf = pos->GetSelfPos();
+	// thetaSelf = pos->GetTheta();
 
 	//navi開始
 	// navigation->Start();
 
 	Vector2D startPos = pos->GetSelfPos();
-	float pre_foward = 150;
+	float pre_foward = 100;
 	poseDrivingControl.SetParams(pre_foward,0,TAIL_ANGLE,true);
 	driveWheels->GetAngles(&angleLeft, &angleRight);
 
@@ -143,6 +144,9 @@ void PhaseNavigation::Execute(){
 		posSelf = pos->GetSelfPos();
 		thetaSelf = pos->GetTheta();
 
+		poseDrivingControl.Driving();
+
+#ifdef LOG
 		if ((frameCount++) > log_refleshrate) {
 			driveWheels->GetAngles(&angleLeft, &angleRight);
 			driveWheels->GetPWMs(&pwmLeft, &pwmRight);
@@ -154,8 +158,9 @@ void PhaseNavigation::Execute(){
 				posSelf.x, posSelf.y, thetaSelf);
 			frameCount = 0;
 		}
+#endif
 
-		if(posSelf.DistanceFrom(startPos)>7){
+		if(posSelf.DistanceFrom(startPos)>8){
 			break;
 		}
 
@@ -166,8 +171,9 @@ void PhaseNavigation::Execute(){
 	printf("PhaseNavigation 3.Linetrace\n");
 	LineLuminance line;
 	// ExponentialSmoothingFilter expFilter(0.5,150.0);
-	float tmp_forward = 100;
+	float tmp_forward = 70;
 	while(1){
+		break;
 		pos->UpdateSelfPos();
 		posSelf = pos->GetSelfPos();
 		thetaSelf = pos->GetTheta();
@@ -177,6 +183,7 @@ void PhaseNavigation::Execute(){
 		poseDrivingControl.SetParams(tmp_forward,turn,TAIL_ANGLE,true);
 		poseDrivingControl.Driving();
 
+#ifdef LOG
 		if ((frameCount++) > log_refleshrate) {
 			driveWheels->GetAngles(&angleLeft, &angleRight);
 			driveWheels->GetPWMs(&pwmLeft, &pwmRight);
@@ -188,16 +195,22 @@ void PhaseNavigation::Execute(){
 				posSelf.x, posSelf.y, thetaSelf);
 			frameCount = 0;
 		}
+#endif
 
-		if((com_count++) > 15){
-			char mes[255];
-			sprintf(mes, "{'x':%f,'y':%f,'theta':%f}\n", posSelf.x, posSelf.y, thetaSelf);
-			com->SendString(mes);
-			com_count = 0;
+		// if((com_count++) > 15){
+		// 	char mes[255];
+		// 	sprintf(mes, "{'x':%f,'y':%f,'theta':%f}\n", posSelf.x, posSelf.y, thetaSelf);
+		// 	com->SendString(mes);
+		// 	com_count = 0;
+		// }
+
+		if(IsFinish(posSelf)){
+			break;
 		}
 
 		tslp_tsk(4);
 	}
+	*/
 
 //	仮想ライントレース用
 // 	float tmp_turn = 0;
@@ -288,16 +301,10 @@ void PhaseNavigation::Execute(){
 }
 
 bool PhaseNavigation::IsFinish(Vector2D posSelf) {
-    if(this->course=='R'){//R(Seesaw)
-		return ( posSelf.x > 0.0 && posSelf.y > 48.0 );
-        // return ( (posSelf.x < 170.0 && posSelf.y < 180.0 )
-		// return ( navigation->IsFinish() == true );
-    }else if(this->course=='L'){//L(LookUpGate)
-		// return (posSelf.x < 137.0 && posSelf.y > 335.0);
-		// return ( navigation->IsFinish() == true );
-//		return (posSelf.x < 0.0 && posSelf.y > 80.0);
-    }
-    return (envViewer->GetTouch()||envViewer->GetUSDistance()<15);
+	return ( posSelf.x > 0.0 && posSelf.y > 49.0-5.0 );
+	// return ( (posSelf.x < 170.0 && posSelf.y < 180.0 )
+	// return ( navigation->IsFinish() == true );
+    // return (envViewer->GetTouch()||envViewer->GetUSDistance()<15);
 }
 
 void PhaseNavigation::Navigation(){

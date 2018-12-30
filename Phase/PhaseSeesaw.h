@@ -36,6 +36,7 @@ namespace Phase{
 			PhaseSeesaw();
 			void Execute() override;
 			bool IsFinish();
+			float observer(float, float);
 	};
 
 }  // namespace Phase
